@@ -1,0 +1,59 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '3.3.4'
+	id 'io.spring.dependency-management' version '1.1.6'
+}
+
+group = 'com.comark'
+version = '0.0.1-SNAPSHOT'
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(17)
+	}
+}
+
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-data-r2dbc'
+	implementation 'org.springframework.boot:spring-boot-starter-webflux'
+	//read excel files
+	implementation group: 'org.apache.poi', name: 'poi', version: '5.2.3'
+	implementation group: 'org.apache.poi', name: 'poi-ooxml', version: '5.2.3'
+	//log4j
+	implementation 'org.apache.logging.log4j:log4j-core:2.20.0'
+	implementation 'org.apache.logging.log4j:log4j-api:2.20.0'
+
+	compileOnly "org.immutables:builder:2.10.1"
+	compileOnly "org.immutables:value:2.10.1:annotations"
+
+	compileOnly group: 'org.immutables', name: 'value', version: '2.10.1'
+	compileOnly 'org.projectlombok:lombok'
+	annotationProcessor 'org.projectlombok:lombok'
+	annotationProcessor "org.immutables:value:2.10.1"
+	//test
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'io.projectreactor:reactor-test'
+	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
+	testImplementation 'org.junit.jupiter:junit-jupiter-params:5.7.0'
+	testImplementation 'org.assertj:assertj-core:3.17.2'
+	testImplementation 'org.mockito:mockito-core:3.5.13'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+	testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
+	implementation group: 'com.google.guava', name: 'guava', version: '33.2.1-jre'
+
+
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}

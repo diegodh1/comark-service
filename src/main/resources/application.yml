@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: ComarkService
+  r2dbc:
+    url: ${DB_HOST:r2dbc:h2:mem:///comarkapp}
+    username: ${DB_HOST:sa}
+    password: ${DB_HOST:}
+    pool:
+      enabled: true
