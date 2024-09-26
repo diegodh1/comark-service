@@ -8,7 +8,7 @@ import org.springframework.data.relational.core.mapping.Table;
 
 import java.util.Set;
 
-@Table("Budget")
+@Table("budget")
 @Value.Immutable
 public interface Budget {
     @Id
@@ -17,7 +17,6 @@ public interface Budget {
     Double budgetAmountFromPreviousYear();
     Long createdAt();
     Long updatedAt();
-
     // One-to-Many relationship with BudgetItem
     @MappedCollection(idColumn = "budgetId")
     @Transient

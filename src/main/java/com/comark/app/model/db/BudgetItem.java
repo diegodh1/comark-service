@@ -14,8 +14,8 @@ public interface BudgetItem {
     String id();
     Integer budgetId(); // Foreign key
     String type();
-    String name();
     @Embedded.Empty
+    String name();
     String detail();
     Double amount();
     Integer frequency();

@@ -16,9 +16,9 @@ public interface BudgetItemTask {
     @Nullable
     String actualAccountingAccount();
     Long scheduledDate();
-    Long createdAt();
-    Long updatedAt();
     @Nullable
     String updatedBy();
     TaskStatus status();
+    Long createdAt();
+    Long updatedAt();
 }

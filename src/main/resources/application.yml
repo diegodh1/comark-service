@@ -3,7 +3,23 @@ spring:
     name: ComarkService
   r2dbc:
     url: ${DB_HOST:r2dbc:h2:mem:///comarkapp}
-    username: ${DB_HOST:sa}
-    password: ${DB_HOST:}
+    username: ${DB_HOST:test}
+    password: ${DB_HOST:test}
     pool:
       enabled: true
+---
+spring:
+  config:
+    activate:
+      on-profile: test
+  r2dbc:
+    properties:
+      dialect: postgres
+    url: r2dbc:tc:postgresql:///test?TC_IMAGE_TAG=9.6.8
+    username: test
+    password: test
+
+logging:
+  level:
+    io.r2dbc.postgresql: DEBUG
+

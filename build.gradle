@@ -24,31 +24,55 @@ repositories {
 }
 
 dependencies {
-	implementation 'org.springframework.boot:spring-boot-starter-data-r2dbc'
+	implementation('org.springframework.boot:spring-boot-starter-data-r2dbc')
 	implementation 'org.springframework.boot:spring-boot-starter-webflux'
+	implementation group: 'io.r2dbc', name: 'r2dbc-postgresql', version: '0.8.10.RELEASE'
+	implementation group: 'org.postgresql', name: 'postgresql', version: '42.7.2'
+	implementation group: 'io.r2dbc', name: 'r2dbc-pool', version: '1.0.1.RELEASE'
+
+	// PostgreSQL Database R2DBC Driver
+	runtimeOnly('io.r2dbc:r2dbc-postgresql')
+	runtimeOnly('org.postgresql:postgresql')
+
+
 	//read excel files
 	implementation group: 'org.apache.poi', name: 'poi', version: '5.2.3'
 	implementation group: 'org.apache.poi', name: 'poi-ooxml', version: '5.2.3'
+
 	//log4j
 	implementation 'org.apache.logging.log4j:log4j-core:2.20.0'
 	implementation 'org.apache.logging.log4j:log4j-api:2.20.0'
 
+	//immutables
 	compileOnly "org.immutables:builder:2.10.1"
 	compileOnly "org.immutables:value:2.10.1:annotations"
+	annotationProcessor "org.immutables:value:2.10.1"
 
+	//lombok
 	compileOnly group: 'org.immutables', name: 'value', version: '2.10.1'
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
-	annotationProcessor "org.immutables:value:2.10.1"
+
 	//test
+
+	// JUnit 5 (Jupiter)
+	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.0'
+	testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.9.0'
+
+	// Spring Boot Starter Test
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'io.projectreactor:reactor-test'
-	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
-	testImplementation 'org.junit.jupiter:junit-jupiter-params:5.7.0'
-	testImplementation 'org.assertj:assertj-core:3.17.2'
+
 	testImplementation 'org.mockito:mockito-core:3.5.13'
+	runtimeOnly 'org.postgresql:postgresql'
+
+	//test containers
+	testImplementation "org.testcontainers:r2dbc:1.20.1"
+	testImplementation 'org.testcontainers:junit-jupiter'
+	testImplementation 'org.testcontainers:postgresql'
+
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-	testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
+	testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.9.0'
 	implementation group: 'com.google.guava', name: 'guava', version: '33.2.1-jre'
 
 
