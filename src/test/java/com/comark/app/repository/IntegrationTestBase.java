@@ -1,5 +1,6 @@
 package com.comark.app.repository;
 
+import org.junit.jupiter.api.TestInstance;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -11,6 +12,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @ActiveProfiles("test")
 @SpringBootTest
 @Testcontainers
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class IntegrationTestBase {
 
     @Container

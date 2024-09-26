@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.immutables.value.Value;
 
+import javax.annotation.Nullable;
 import java.util.Date;
 
 
@@ -17,6 +18,7 @@ import java.util.Date;
 public interface PresupuestoItemDto {
     PresupuestoTipo getTipo();
     String getNombre();
+    @Nullable
     String getDetalle();
     Double getPresupuesto();
     Frecuencia getFrecuencia();

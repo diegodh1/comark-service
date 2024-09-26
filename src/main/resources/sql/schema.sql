@@ -15,7 +15,7 @@ CREATE TABLE "budget_item" (
                                "amount" DOUBLE PRECISION,
                                "frequency" DOUBLE PRECISION,
                                "expected_frequency_amount" DOUBLE PRECISION,
-                               "initial_date" DATE,
+                               "initial_date" BIGINT,
                                "accounting_account" VARCHAR(255), -- Changed to VARCHAR
                                "created_at" BIGINT,
                                "updated_at" BIGINT,
@@ -31,7 +31,7 @@ CREATE TABLE "budget_item_task" (
                                     "scheduled_date" BIGINT,
                                     "updated_by" VARCHAR(255),
                                     "status" VARCHAR(255),
-                                    "created_at" TIMESTAMP,
-                                    "updated_at" TIMESTAMP,
+                                    "created_at" BIGINT,
+                                    "updated_at" BIGINT,
                                     FOREIGN KEY ("budget_item_id") REFERENCES "budget_item" ("id")
 );

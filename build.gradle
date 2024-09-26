@@ -26,12 +26,14 @@ repositories {
 dependencies {
 	implementation('org.springframework.boot:spring-boot-starter-data-r2dbc')
 	implementation 'org.springframework.boot:spring-boot-starter-webflux'
-	implementation group: 'io.r2dbc', name: 'r2dbc-postgresql', version: '0.8.10.RELEASE'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	implementation group: 'org.postgresql', name: 'r2dbc-postgresql', version: '1.0.0.RELEASE'
 	implementation group: 'org.postgresql', name: 'postgresql', version: '42.7.2'
-	implementation group: 'io.r2dbc', name: 'r2dbc-pool', version: '1.0.1.RELEASE'
+	implementation group: 'io.r2dbc', name: 'r2dbc-pool', version: '1.0.0.RELEASE'
+	implementation group: 'io.r2dbc', name: 'r2dbc-spi', version: '1.0.0.RELEASE'
 
 	// PostgreSQL Database R2DBC Driver
-	runtimeOnly('io.r2dbc:r2dbc-postgresql')
+	runtimeOnly('org.postgresql:r2dbc-postgresql')
 	runtimeOnly('org.postgresql:postgresql')
 
 
@@ -44,12 +46,12 @@ dependencies {
 	implementation 'org.apache.logging.log4j:log4j-api:2.20.0'
 
 	//immutables
+	compileOnly group: 'org.immutables', name: 'value', version: '2.10.1'
 	compileOnly "org.immutables:builder:2.10.1"
 	compileOnly "org.immutables:value:2.10.1:annotations"
 	annotationProcessor "org.immutables:value:2.10.1"
 
 	//lombok
-	compileOnly group: 'org.immutables', name: 'value', version: '2.10.1'
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
 

@@ -17,7 +17,8 @@ import reactor.core.publisher.Mono;
 
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -50,7 +51,7 @@ public class TransactBudgetRepositoryImpl implements TransactBudgetRepository {
 
     private Mono<Budget> createBudget(String actorId, Double budgetAmountFromPreviousYear){
         return budgetRepository.save(ImmutableBudget.builder()
-                .id(LocalDate.ofEpochDay(Instant.now().toEpochMilli()).getYear())
+                .id(LocalDate.now().getYear())
                 .actorId(actorId)
                 .createdAt(Instant.now().toEpochMilli())
                 .updatedAt(Instant.now().toEpochMilli())
@@ -72,7 +73,7 @@ public class TransactBudgetRepositoryImpl implements TransactBudgetRepository {
                 .flatMapIterable(this::buildBudgetItemTasks)
                 .collectList()
                 .flatMap(tasks -> Mono.defer(() -> budgetItemTaskRepository.saveAll(tasks).collectList()))
-                .then(Mono.just(ImmutableSuccess.builder().build()));
+                .then(Mono.just(ImmutableSuccess.builder().success(true).build()));
 
     }
 
@@ -80,7 +81,9 @@ public class TransactBudgetRepositoryImpl implements TransactBudgetRepository {
         Long currentDate = Instant.now().toEpochMilli();
         List<BudgetItemTask> tasks = new ArrayList<>();
         int frequency = budgetItem.frequency();
-        Instant initialDate = Instant.ofEpochMilli(budgetItem.initialDate());
+        var initialDate = Instant.ofEpochMilli(budgetItem.initialDate())
+                .atZone(ZoneOffset.UTC)
+                .toLocalDate();
         int incrementMonthsBy = 12 / frequency;
         for (int i = 1; i <= frequency; i++) {
             var task = ImmutableBudgetItemTask.builder()
@@ -91,10 +94,10 @@ public class TransactBudgetRepositoryImpl implements TransactBudgetRepository {
                     .createdAt(currentDate)
                     .updatedAt(currentDate)
                     .status(TaskStatus.PENDING)
-                    .scheduledDate(initialDate.toEpochMilli())
+                    .scheduledDate(initialDate.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli())
                     .build();
             tasks.add(task);
-            initialDate = initialDate.plus(incrementMonthsBy, ChronoUnit.MONTHS);
+            initialDate = initialDate.plusMonths(incrementMonthsBy);
         }
         return tasks;
     }
