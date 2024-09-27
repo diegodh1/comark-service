@@ -23,6 +23,8 @@ public interface BudgetItemTask {
     String actualAccountingAccount();
     Long scheduledDate();
     @Nullable
+    String billId();
+    @Nullable
     String updatedBy();
     TaskStatus status();
     Long createdAt();

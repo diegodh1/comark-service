@@ -28,6 +28,7 @@ CREATE TABLE "budget_item_task" (
                                     "budget_item_id" VARCHAR(255),
                                     "actual_amount" DOUBLE PRECISION,
                                     "actual_accounting_account" VARCHAR(255), -- Changed to VARCHAR
+                                    "bill_id" VARCHAR(255),
                                     "scheduled_date" BIGINT,
                                     "updated_by" VARCHAR(255),
                                     "status" VARCHAR(255),
