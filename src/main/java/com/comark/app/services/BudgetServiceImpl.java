@@ -1,7 +1,12 @@
 package com.comark.app.services;
 
 import com.comark.app.model.Success;
+import com.comark.app.model.db.BudgetItemTask;
+import com.comark.app.model.dto.budget.BudgetItemTaskDto;
+import com.comark.app.model.dto.budget.CompleteTaskDto;
 import com.comark.app.model.dto.budget.PresupuestoItemDto;
+import com.comark.app.model.enums.TaskStatus;
+import com.comark.app.repository.BudgetItemTaskRepository;
 import com.comark.app.repository.TransactBudgetRepositoryImpl;
 import com.comark.app.services.util.BudgetUtil;
 import org.slf4j.Logger;
@@ -18,10 +23,12 @@ public class BudgetServiceImpl implements BudgetService {
     private static final Logger LOGGER = LoggerFactory.getLogger(BudgetServiceImpl.class);
     private final BudgetUtil budgetUtil;
     private final TransactBudgetRepositoryImpl transactBudgetRepository;
+    private final BudgetItemTaskRepository budgetItemTaskRepository;
 
-    public BudgetServiceImpl(BudgetUtil budgetUtil, TransactBudgetRepositoryImpl transactBudgetRepository) {
+    public BudgetServiceImpl(BudgetUtil budgetUtil, TransactBudgetRepositoryImpl transactBudgetRepository, BudgetItemTaskRepository budgetItemTaskRepository) {
         this.budgetUtil = budgetUtil;
         this.transactBudgetRepository = transactBudgetRepository;
+        this.budgetItemTaskRepository = budgetItemTaskRepository;
     }
 
     @Override
@@ -32,6 +39,22 @@ public class BudgetServiceImpl implements BudgetService {
                         getBudgetFromPreviousYear(budgetList))))
                 .flatMap(tuple2 -> transactBudgetRepository.transactCreateBudget(tuple2.getT1(), actorId, tuple2.getT2()))
                 .doOnError(error -> LOGGER.error(error.getMessage(), error));
+    }
+
+    @Override
+    public Mono<List<BudgetItemTaskDto>> getAllBudgetItemTasks(Integer budgetId) {
+        return transactBudgetRepository.getAllBudgetItemTasks(budgetId);
+    }
+
+    @Override
+    public Mono<BudgetItemTask> completeTask(CompleteTaskDto completeTaskDto) {
+        return budgetItemTaskRepository.updateBudgetItemTask(
+                TaskStatus.COMPLETED.name(),
+                completeTaskDto.amount(),
+                completeTaskDto.actualAccountingAccount(),
+                completeTaskDto.billId(),
+                completeTaskDto.id()
+        ).cast(BudgetItemTask.class);
     }
 
     private double getBudgetFromPreviousYear(List<PresupuestoItemDto> items){

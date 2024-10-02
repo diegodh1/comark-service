@@ -1,14 +1,13 @@
 package com.comark.app.web;
 
+import com.comark.app.model.dto.budget.CompleteTaskDto;
 import com.comark.app.services.BudgetService;
+import lombok.NonNull;
 import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.codec.multipart.FilePart;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestPart;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
 @RestController
@@ -26,7 +25,19 @@ public class BudgetController {
                 .switchIfEmpty(Mono.error(new IllegalArgumentException("invalid File")))
                 .flatMap(this::getByteArray)
                 .flatMap(file -> budgetService.upsertBudget(file, "actorId"))
-                .flatMap(success -> Mono.just(ResponseEntity.ok().build()));
+                .map(success -> ResponseEntity.ok().build());
+    }
+
+    @GetMapping(value = "/{budgetId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public Mono<ResponseEntity> getAllTasksByBudget(@PathVariable @NonNull Integer budgetId) {
+        return budgetService.getAllBudgetItemTasks(budgetId)
+                .map(response -> ResponseEntity.ok().body(response));
+    }
+
+    @PostMapping("/complete")
+    public Mono<ResponseEntity<Void>> completeTask(@RequestBody CompleteTaskDto completeTaskDto) {
+        return budgetService.completeTask(completeTaskDto)
+                .map(updatedTask -> ResponseEntity.ok().build());
     }
 
     private Mono<byte[]> getByteArray(FilePart filePart) {

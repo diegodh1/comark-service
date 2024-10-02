@@ -4,12 +4,15 @@ import com.comark.app.mapper.BudgetItemMapper;
 import com.comark.app.model.ImmutableSuccess;
 import com.comark.app.model.Success;
 import com.comark.app.model.db.*;
+import com.comark.app.model.dto.budget.BudgetItemTaskDto;
+import com.comark.app.model.dto.budget.ImmutableBudgetItemTaskDto;
 import com.comark.app.model.dto.budget.PresupuestoItemDto;
 import com.comark.app.model.enums.TaskStatus;
 import lombok.NonNull;
 import org.apache.logging.log4j.core.config.plugins.validation.constraints.NotBlank;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
@@ -19,9 +22,8 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Repository
@@ -31,6 +33,7 @@ public class TransactBudgetRepositoryImpl implements TransactBudgetRepository {
     private final BudgetItemTaskRepository budgetItemTaskRepository;
     private final BudgetItemMapper mapper;
     private static final Logger LOGGER = LoggerFactory.getLogger(TransactBudgetRepositoryImpl.class);
+    private final String DATE_FORMAT = "yyyy-MM-dd";
 
 
     public TransactBudgetRepositoryImpl(BudgetRepository budgetRepository, BudgetItemRepository budgetItemRepository, BudgetItemTaskRepository budgetItemTaskRepository, BudgetItemMapper mapper) {
@@ -47,6 +50,50 @@ public class TransactBudgetRepositoryImpl implements TransactBudgetRepository {
                 .flatMap(budget -> batchInsertBudgetItem(budget, budgetItems))
                 .flatMap(this::batchInsertBudgetItemTask)
                 .doOnError(error -> LOGGER.error(error.getMessage(), error));
+    }
+
+    @Override
+    public Mono<List<BudgetItemTaskDto>> getAllBudgetItemTasks(@NonNull Integer budgetId) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        return Mono.zip(budgetItemRepository.getAllByBudgetId(budgetId).collectList(), budgetItemTaskRepository.getAllByBudgetId(budgetId).collectList())
+                .flatMap(results -> {
+                    // Create a map of budgetItemId to budgetItemTasks
+                    Map<String, List<BudgetItemTask>> budgetItemTaskMap = new HashMap<>();
+                    Map<String, BudgetItem> budgetItemMap = new HashMap<>();
+                    //get tuples
+                    List<BudgetItem> budgetItems = (List<BudgetItem>) results.get(0);
+                    List<BudgetItemTask> budgetItemTasks = (List<BudgetItemTask>) results.get(1);
+                    // Map each budgetItemTask to its corresponding budgetItem
+                    for (BudgetItem budgetItem : budgetItems) {
+                        budgetItemMap.put(budgetItem.id(), budgetItem);
+                    }
+                    // Map each budgetItemTask to its corresponding budgetItem
+                    for (BudgetItemTask task : budgetItemTasks) {
+                        budgetItemTaskMap.computeIfAbsent(task.budgetItemId(), id -> new ArrayList<>()).add(task);
+                    }
+                    List<BudgetItemTaskDto> budgetItemTaskDtos = new ArrayList<>();
+                    for (Map.Entry<String, BudgetItem> budgetItem: budgetItemMap.entrySet()){
+                        var tasks = budgetItemTaskMap.get(budgetItem.getKey());
+                        tasks.forEach(task -> {
+                            var scheduleDate = Instant.ofEpochMilli(task.scheduledDate())
+                                    .atOffset(ZoneOffset.UTC)
+                                    .toLocalDate();
+                            var newTask = ImmutableBudgetItemTaskDto.builder()
+                                    .id(task.id())
+                                    .name(budgetItem.getValue().name())
+                                    .details(budgetItem.getValue().detail())
+                                    .actualAccountingAccount(task.actualAccountingAccount())
+                                    .actualAmount(task.actualAmount())
+                                    .status(task.status().name())
+                                    .expectedAccountingAccount(budgetItem.getValue().accountingAccount())
+                                    .expectedAmount(budgetItem.getValue().expectedFrequencyAmount())
+                                    .scheduledDate(scheduleDate.format(formatter))
+                                    .build();
+                            budgetItemTaskDtos.add(newTask);
+                        });
+                    }
+                    return Mono.just(budgetItemTaskDtos);
+                });
     }
 
     private Mono<Budget> createBudget(String actorId, Double budgetAmountFromPreviousYear){

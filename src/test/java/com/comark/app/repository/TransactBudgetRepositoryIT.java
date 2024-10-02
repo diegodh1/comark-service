@@ -85,4 +85,25 @@ public class TransactBudgetRepositoryIT extends IntegrationTestBase{
         Assertions.assertEquals(expectedMonthIncrease, ChronoUnit.MONTHS.between(thirdDate, fourDate));
     }
 
+    @Test
+    void shouldGetAllTasksDto() {
+        List<PresupuestoItemDto> presupuestoItemDtos = new ArrayList<>();
+        presupuestoItemDtos.add(ImmutablePresupuestoItemDto.builder()
+                .tipo(PresupuestoTipo.GASTOS_DIVERSOS)
+                .nombre("MANTENIMIENTO")
+                .cuentaContableId("cuentaID")
+                .frecuencia(Frecuencia.CADA_TRES_MESES)
+                .fechaInicio(new Date())
+                .presupuesto(28.0)
+                .build());
+        var response = transactBudgetRepository.transactCreateBudget(presupuestoItemDtos, "actorId", 1500.0)
+                .block();
+        Assertions.assertNotNull(response);
+        Assertions.assertTrue(true);
+
+        var tasks = transactBudgetRepository.getAllBudgetItemTasks(2024).block();
+        Assertions.assertNotNull(tasks);
+        Assertions.assertEquals(4, tasks.size());
+    }
+
 }
