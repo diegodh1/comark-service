@@ -140,7 +140,7 @@ public class TransactBudgetRepositoryImpl implements TransactBudgetRepository {
                     .actualAmount(0.0)
                     .createdAt(currentDate)
                     .updatedAt(currentDate)
-                    .status(TaskStatus.PENDING)
+                    .status(TaskStatus.SCHEDULED)
                     .scheduledDate(initialDate.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli())
                     .build();
             tasks.add(task);
