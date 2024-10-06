@@ -1,10 +1,12 @@
 package com.comark.app.web;
 
+import com.comark.app.model.db.ImmutableBudgetItem;
 import com.comark.app.model.dto.budget.*;
 import com.comark.app.model.enums.Frecuencia;
 import com.comark.app.model.enums.PresupuestoTipo;
 import com.comark.app.model.enums.TaskStatus;
 import com.comark.app.repository.*;
+import com.comark.app.services.BudgetService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,6 +24,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
@@ -40,6 +43,8 @@ public class BudgetControllerIT extends IntegrationTestBase {
     private BudgetItemTaskRepository budgetItemTaskRepository;
     @Autowired
     private TransactBudgetRepository transactBudgetRepository;
+    @Autowired
+    private BudgetService budgetService;
 
     @BeforeEach
     void setup(){
@@ -55,9 +60,6 @@ public class BudgetControllerIT extends IntegrationTestBase {
 
     @Test
     public void shouldCreateBudgetFromFileSuccessfully() throws IOException {
-        // Use a sample Excel file for testing (e.g., stored in the resources folder)
-        ClassPathResource fileResource = new ClassPathResource("");
-
         // Send the POST request with the file
         webTestClient.post()
                 .uri("/budget/upload")
@@ -89,7 +91,7 @@ public class BudgetControllerIT extends IntegrationTestBase {
                 .build());
         transactBudgetRepository.transactCreateBudget(presupuestoItemDtos, "actorId", 1500.0)
                 .block();
-        // Send the POST request with the file
+        // Send the get request
         webTestClient.get()
                 .uri("/budget/2024")
                 .exchange()
@@ -144,6 +146,66 @@ public class BudgetControllerIT extends IntegrationTestBase {
                     assertThat(task.billId()).isEqualTo("billId");
                 })
                 .block();
+    }
+
+    @Test
+    public void shouldGetReportOfBudgetSuccessfully() {
+        // Create a task to be updated
+        List<PresupuestoItemDto> presupuestoItemDtos = new ArrayList<>();
+        presupuestoItemDtos.add(ImmutablePresupuestoItemDto.builder()
+                .tipo(PresupuestoTipo.GASTOS_DIVERSOS)
+                .nombre("MANTENIMIENTO")
+                .cuentaContableId("cuentaID")
+                .frecuencia(Frecuencia.CADA_TRES_MESES)
+                .fechaInicio(new Date())
+                .presupuesto(1000.0)
+                .build());
+
+        presupuestoItemDtos.add(ImmutablePresupuestoItemDto.builder()
+                .tipo(PresupuestoTipo.INGRESOS)
+                .nombre("INGRESOS")
+                .cuentaContableId("cuentaID")
+                .frecuencia(Frecuencia.CADA_TRES_MESES)
+                .fechaInicio(new Date())
+                .presupuesto(2000.0)
+                .build());
+        transactBudgetRepository.transactCreateBudget(presupuestoItemDtos, "actorId", 0.0)
+                .block();
+
+        var itemTasks = budgetItemTaskRepository.getAllByBudgetId(2024).collectList().block();
+        var items = budgetItemRepository.getAllByBudgetId(2024).collectList().block();
+
+        assert itemTasks != null;
+        assert items != null;
+        for(var item: itemTasks){
+            budgetService.completeTask(
+                    ImmutableCompleteTaskDto.builder().id(item.id())
+                            .actualAccountingAccount("accountId")
+                            .amount(items.stream().filter(it -> it.id().equals(item.budgetItemId())).findFirst().map(ImmutableBudgetItem::expectedFrequencyAmount).orElse(0.0))
+                            .billId("billId")
+                            .build()
+            ).block();
+        }
+
+        // Send the get request
+        webTestClient.get()
+                .uri("/budget//report/2024")
+                .exchange()
+                .expectStatus()
+                .isOk()
+                .expectBody(Map.class)
+                .value(responseBody -> {
+                    // Example: Assert the structure is correct
+                    assertNotNull(responseBody);
+                    assertInstanceOf(Map.class, responseBody);
+                    Map<String, Map<Integer, String>> result = (Map<String, Map<Integer, String>>) responseBody;
+                    double totalExpectedIncome = result.get("EXPECTED_INCOME").values().stream().map(Double::valueOf).max(Double::compareTo).orElse(0.0);
+                    double totalActualIncome = result.get("ACTUAL_INCOME").values().stream().map(Double::valueOf).max(Double::compareTo).orElse(1.0);
+                    double totalExpectedExpense = result.get("EXPECTED_EXPENSE").values().stream().map(Double::valueOf).max(Double::compareTo).orElse(0.0);
+                    double totalActualExpense = result.get("ACTUAL_EXPENSE").values().stream().map(Double::valueOf).max(Double::compareTo).orElse(1.0);
+                    assertEquals(totalExpectedIncome, totalActualIncome);
+                    assertEquals(totalExpectedExpense, totalActualExpense);
+                });
     }
 
     private  MultipartBodyBuilder createMultipartBodyBuilder() throws IOException {

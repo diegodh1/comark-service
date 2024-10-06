@@ -2,6 +2,7 @@ package com.comark.app.web;
 
 import com.comark.app.model.dto.budget.CompleteTaskDto;
 import com.comark.app.services.BudgetService;
+import com.comark.app.services.ReportService;
 import lombok.NonNull;
 import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.http.MediaType;
@@ -14,9 +15,11 @@ import reactor.core.publisher.Mono;
 @RequestMapping("/budget")
 public class BudgetController {
     private BudgetService budgetService;
+    private ReportService reportService;
 
-    public BudgetController(BudgetService budgetService) {
+    public BudgetController(BudgetService budgetService, ReportService reportService) {
         this.budgetService = budgetService;
+        this.reportService = reportService;
     }
 
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -31,6 +34,12 @@ public class BudgetController {
     @GetMapping(value = "/{budgetId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public Mono<ResponseEntity> getAllTasksByBudget(@PathVariable @NonNull Integer budgetId) {
         return budgetService.getAllBudgetItemTasks(budgetId)
+                .map(response -> ResponseEntity.ok().body(response));
+    }
+
+    @GetMapping(value = "/report/{budgetId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public Mono<ResponseEntity> getBudgetReport(@PathVariable @NonNull Integer budgetId) {
+        return reportService.getReport(budgetId)
                 .map(response -> ResponseEntity.ok().body(response));
     }
 
