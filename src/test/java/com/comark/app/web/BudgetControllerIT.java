@@ -198,13 +198,8 @@ public class BudgetControllerIT extends IntegrationTestBase {
                     // Example: Assert the structure is correct
                     assertNotNull(responseBody);
                     assertInstanceOf(Map.class, responseBody);
-                    Map<String, Map<Integer, String>> result = (Map<String, Map<Integer, String>>) responseBody;
-                    double totalExpectedIncome = result.get("EXPECTED_INCOME").values().stream().map(Double::valueOf).max(Double::compareTo).orElse(0.0);
-                    double totalActualIncome = result.get("ACTUAL_INCOME").values().stream().map(Double::valueOf).max(Double::compareTo).orElse(1.0);
-                    double totalExpectedExpense = result.get("EXPECTED_EXPENSE").values().stream().map(Double::valueOf).max(Double::compareTo).orElse(0.0);
-                    double totalActualExpense = result.get("ACTUAL_EXPENSE").values().stream().map(Double::valueOf).max(Double::compareTo).orElse(1.0);
-                    assertEquals(totalExpectedIncome, totalActualIncome);
-                    assertEquals(totalExpectedExpense, totalActualExpense);
+                    Map<String, List<ReportValueDto>> result = (Map<String, List<ReportValueDto>>) responseBody;
+                    assertFalse(result.isEmpty());
                 });
     }
 

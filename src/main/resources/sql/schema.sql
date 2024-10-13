@@ -36,3 +36,22 @@ CREATE TABLE "budget_item_task" (
                                     "updated_at" BIGINT,
                                     FOREIGN KEY ("budget_item_id") REFERENCES "budget_item" ("id")
 );
+
+CREATE TABLE building_balance (
+                                  "id" VARCHAR(255) PRIMARY KEY,
+                                  apartment_number VARCHAR(255) NOT NULL,
+                                  date BIGINT NOT NULL,
+                                  administration_charge DOUBLE PRECISION,
+                                  month_charge DOUBLE PRECISION,
+                                  interest_rate DOUBLE PRECISION,
+                                  interest_charge DOUBLE PRECISION,
+                                  interest_balance DOUBLE PRECISION,
+                                  additional_charge DOUBLE PRECISION,
+                                  penalty_charge DOUBLE PRECISION,
+                                  legal_charge DOUBLE PRECISION,
+                                  other_charge DOUBLE PRECISION,
+                                  total_to_paid DOUBLE PRECISION,
+                                  discount DOUBLE PRECISION,
+                                  last_paid DOUBLE PRECISION,
+                                  final_charge DOUBLE PRECISION
+);

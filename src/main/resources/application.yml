@@ -23,4 +23,6 @@ logging:
   level:
     org.springframework.web: DEBUG
     org.springframework.web.filter.CommonsRequestLoggingFilter: DEBUG
+    org.springframework.data.r2dbc.core: DEBUG
+    io.r2dbc.postgresql: DEBUG
 

@@ -1,15 +1,14 @@
-package com.comark.app.services;
+package com.comark.app.services.impl;
 
 import com.comark.app.model.db.BudgetItem;
 import com.comark.app.model.db.BudgetItemTask;
-import com.comark.app.model.dto.budget.BudgetItemTaskDto;
-import com.comark.app.model.dto.budget.PresupuestoItemDto;
+import com.comark.app.model.dto.budget.ImmutableReportValueDto;
+import com.comark.app.model.dto.budget.ReportValueDto;
 import com.comark.app.model.enums.PresupuestoTipo;
 import com.comark.app.repository.BudgetItemRepository;
 import com.comark.app.repository.BudgetItemTaskRepository;
 import com.comark.app.repository.BudgetRepository;
-import com.comark.app.repository.TransactBudgetRepositoryImpl;
-import com.comark.app.services.util.BudgetUtil;
+import com.comark.app.services.ReportService;
 import lombok.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,7 +41,7 @@ public class ReportServiceImpl implements ReportService {
 
 
     @Override
-    public Mono<Map<String, Map<Integer, String>>> getReport(@NonNull Integer budgetId) {
+    public Mono<Map<String, List<ReportValueDto>>> getReport(@NonNull Integer budgetId) {
         return Mono.zip(getAllBudgetItems(budgetId).collectList(), getAllBudgetItemTasks(budgetId).collectList(), budgetRepository.getBudgetById(budgetId))
                 .flatMap(tuple -> Mono.just(getReportHelper(tuple.getT1(), tuple.getT2())))
                 .doOnError(error -> LOGGER.error(error.getMessage(), error));
@@ -55,8 +54,8 @@ public class ReportServiceImpl implements ReportService {
         return budgetItemTaskRepository.getAllByBudgetId(budgetId).cast(BudgetItemTask.class);
     }
 
-    private Map<String, Map<Integer, String>> getReportHelper(List<BudgetItem> budgetItems, List<BudgetItemTask> budgetItemTask){
-        Map<String, Map<Integer, String>> response = new HashMap<>();
+    private Map<String, List<ReportValueDto>> getReportHelper(List<BudgetItem> budgetItems, List<BudgetItemTask> budgetItemTask){
+        Map<String, List<ReportValueDto>> response = new HashMap<>();
         Map<String, BudgetItem> mapExpectedValues = new HashMap<>();
         List<BudgetItemTask> incomeTasks = new ArrayList<>();
         List<BudgetItemTask> expenseTasks = new ArrayList<>();
@@ -82,14 +81,14 @@ public class ReportServiceImpl implements ReportService {
         return response;
     }
 
-    private Tuple2<Map<Integer, String>, Map<Integer, String>> calculateTaskValuesByMonth(List<BudgetItemTask> tasks, Map<String, BudgetItem> mapExpectedValues){
+    private Tuple2<List<ReportValueDto>, List<ReportValueDto>> calculateTaskValuesByMonth(List<BudgetItemTask> tasks, Map<String, BudgetItem> mapExpectedValues){
         tasks = tasks.stream().sorted(Comparator.comparingLong(BudgetItemTask::scheduledDate)).collect(Collectors.toList());
         DecimalFormat decimalFormat = new DecimalFormat("#");
         LocalDate lastDate = null;
         double expectedValue = 0.0;
         double actualValue = 0.0;
-        Map<Integer, String> expectedValuesMap = new LinkedHashMap<>();
-        Map<Integer, String> actualValuesMap = new LinkedHashMap<>();
+        List<ReportValueDto> expectedValuesMap = new ArrayList<>();
+        List<ReportValueDto> actualValuesMap = new ArrayList<>();
         for (BudgetItemTask task : tasks) {
             var currentDate = Instant.ofEpochMilli(task.scheduledDate()).atOffset(ZoneOffset.UTC).toLocalDate();
             lastDate = lastDate == null? currentDate: lastDate;
@@ -98,8 +97,8 @@ public class ReportServiceImpl implements ReportService {
                 int lastMonth = lastDate.getMonthValue();
                 for (int i = 0; i < monthsBetween; i++) {
                     int monthValue = (lastMonth + i) % 13;
-                    expectedValuesMap.put(monthValue, decimalFormat.format(expectedValue));
-                    actualValuesMap.put(monthValue, decimalFormat.format(actualValue));
+                    expectedValuesMap.add(ImmutableReportValueDto.builder().value(decimalFormat.format(expectedValue)).month(monthValue).build());
+                    actualValuesMap.add(ImmutableReportValueDto.builder().value(decimalFormat.format(actualValue)).month(monthValue).build());
                 }
                 lastDate = currentDate;
             }
@@ -107,8 +106,8 @@ public class ReportServiceImpl implements ReportService {
             expectedValue += mapExpectedValues.get(task.budgetItemId()).expectedFrequencyAmount();
         }
         if(lastDate != null){
-            expectedValuesMap.put(lastDate.getMonthValue(), decimalFormat.format(expectedValue));
-            actualValuesMap.put(lastDate.getMonthValue(), decimalFormat.format(actualValue));
+            expectedValuesMap.add(ImmutableReportValueDto.builder().value(decimalFormat.format(expectedValue)).month(lastDate.getMonthValue()).build());
+            actualValuesMap.add(ImmutableReportValueDto.builder().value(decimalFormat.format(actualValue)).month(lastDate.getMonthValue()).build());
         }
         return Tuples.of(expectedValuesMap, actualValuesMap);
     }

@@ -9,25 +9,33 @@ import reactor.test.StepVerifier;
 
 import java.io.IOException;
 
-public class BudgetUtilImplTest {
-    private BudgetUtilImpl budgetUtil;
+public class FileUtilImplTest {
+    private FileUtilImpl budgetUtil;
 
     @BeforeEach
     void setup(){
-        budgetUtil = new BudgetUtilImpl();
+        budgetUtil = new FileUtilImpl();
     }
 
     @Test
-    public void shouldReadExcelFileSuccessfully() throws IOException {
-        byte[] file = getFileFromResources("budget_test_file.xlsx");
+    public void shouldReadBudgetExcelFileSuccessfully() throws IOException {
+        byte[] file = getBudgetFileFromResources("budget_test_file.xlsx");
         StepVerifier.create(budgetUtil.loadBudgetFromFile(file))
                 .assertNext(budget -> Assertions.assertEquals(27, budget.size()))
                 .verifyComplete();
     }
 
     @Test
-    public void shouldThrowErrorsWhenFileIsNotValid() throws IOException {
-        byte[] file = getFileFromResources("budget_test_with_errors.xlsx");
+    public void shouldReadBuildingBalanceExcelFileSuccessfully() throws IOException {
+        byte[] file = getBuildingFileFromResources("building_test_file.xlsx");
+        StepVerifier.create(budgetUtil.loadBuildingBalanceFromFile(file))
+                .assertNext(budget -> Assertions.assertEquals(5, budget.size()))
+                .verifyComplete();
+    }
+
+    @Test
+    public void shouldThrowErrorsWhenBudgetFileIsNotValid() throws IOException {
+        byte[] file = getBudgetFileFromResources("budget_test_with_errors.xlsx");
         StepVerifier.create(budgetUtil.loadBudgetFromFile(file))
                 .verifyErrorMatches(ex -> ex instanceof IllegalArgumentException);
     }
@@ -39,8 +47,13 @@ public class BudgetUtilImplTest {
      * @return A File object representing the resource file.
      * @throws Exception If the file cannot be created or accessed.
      */
-    public static byte[] getFileFromResources(String fileName) throws IOException {
+    public static byte[] getBudgetFileFromResources(String fileName) throws IOException {
         // Load the resource file using ClassLoader
         return ByteStreams.toByteArray(new ClassPathResource(String.format("budget/%s", fileName)).getInputStream());
+    }
+
+    public static byte[] getBuildingFileFromResources(String fileName) throws IOException {
+        // Load the resource file using ClassLoader
+        return ByteStreams.toByteArray(new ClassPathResource(String.format("building_balance/%s", fileName)).getInputStream());
     }
 }

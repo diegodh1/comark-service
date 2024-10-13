@@ -1,5 +1,6 @@
 package com.comark.app.services;
 
+import com.comark.app.model.dto.budget.ReportValueDto;
 import lombok.NonNull;
 import reactor.core.publisher.Mono;
 
@@ -7,5 +8,5 @@ import java.util.List;
 import java.util.Map;
 
 public interface ReportService {
-    Mono<Map<String, Map<Integer, String>>> getReport(@NonNull Integer budgetId);
+    Mono<Map<String, List<ReportValueDto>>> getReport(@NonNull Integer budgetId);
 }
