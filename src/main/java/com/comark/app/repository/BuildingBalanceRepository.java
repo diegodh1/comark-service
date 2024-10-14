@@ -17,4 +17,7 @@ public interface BuildingBalanceRepository extends ReactiveCrudRepository<Buildi
 
     @Query("SELECT * FROM building_balance where apartment_number = :id")
     Flux<ImmutableBuildingBalance> getAllByApartmentNumber(String apartmentNumber);
+
+    @Query("SELECT * FROM building_balance WHERE apartment_number = :apartmentNumber ORDER BY date DESC LIMIT 1")
+    Mono<ImmutableBuildingBalance> getLastBalanceByApartment(String apartmentNumber);
 }

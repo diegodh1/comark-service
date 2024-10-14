@@ -2,6 +2,8 @@ package com.comark.app.web;
 
 import com.comark.app.model.db.BuildingBalance;
 import com.comark.app.model.db.ImmutableBuildingBalance;
+import com.comark.app.model.dto.balance.BalanceDto;
+import com.comark.app.model.dto.balance.ImmutableBalanceDto;
 import com.comark.app.model.dto.budget.ImmutablePresupuestoItemDto;
 import com.comark.app.model.enums.Frecuencia;
 import com.comark.app.model.enums.PresupuestoTipo;
@@ -78,6 +80,7 @@ public class BuildingBalanceControllerIT extends IntegrationTestBase {
                         .finalCharge(5.0)
                         .legalCharge(5.0)
                         .interestCharge(0.0)
+                        .lastBalance(0.0)
                         .date(Instant.now().toEpochMilli())
                         .interestRate(0.0)
                         .otherCharge(0.0)
@@ -98,6 +101,7 @@ public class BuildingBalanceControllerIT extends IntegrationTestBase {
                         .totalToPaid(4.0)
                         .finalCharge(5.0)
                         .legalCharge(5.0)
+                        .lastBalance(0.0)
                         .interestCharge(0.0)
                         .date(Instant.now().toEpochMilli())
                         .interestRate(0.0)
@@ -138,6 +142,7 @@ public class BuildingBalanceControllerIT extends IntegrationTestBase {
                         .lastPaid(3.0)
                         .totalToPaid(4.0)
                         .finalCharge(5.0)
+                        .lastBalance(0.0)
                         .legalCharge(5.0)
                         .interestCharge(0.0)
                         .date(Instant.now().toEpochMilli())
@@ -158,6 +163,7 @@ public class BuildingBalanceControllerIT extends IntegrationTestBase {
                         .monthCharge(2.0)
                         .lastPaid(3.0)
                         .totalToPaid(4.0)
+                        .lastBalance(0.0)
                         .finalCharge(5.0)
                         .legalCharge(5.0)
                         .interestCharge(0.0)
@@ -185,6 +191,68 @@ public class BuildingBalanceControllerIT extends IntegrationTestBase {
                     assertNotNull(responseBody);  // Ensure the body is not null
                     assertFalse(responseBody.isEmpty());  // Ensure the list is not empty (adjust based on test case)
                     assertEquals(responseBody.size(), 1);  // Ensure it contains tasks
+                });
+    }
+
+    @Test
+    public void shouldGetAccountBalanceByApartmentNumber() {
+        List<BuildingBalance> balanceList = new ArrayList<>();
+        balanceList.add(
+                ImmutableBuildingBalance.builder()
+                        .id("test")
+                        .apartmentNumber("1")
+                        .administrationCharge(1.0)
+                        .monthCharge(2.0)
+                        .lastPaid(3.0)
+                        .totalToPaid(4.0)
+                        .finalCharge(5.0)
+                        .lastBalance(0.0)
+                        .legalCharge(5.0)
+                        .interestCharge(0.0)
+                        .date(Instant.now().toEpochMilli())
+                        .interestRate(0.0)
+                        .otherCharge(0.0)
+                        .interestBalance(0.0)
+                        .penaltyCharge(0.0)
+                        .additionalCharge(0.0)
+                        .discount(0.0)
+                        .build()
+        );
+
+        balanceList.add(
+                ImmutableBuildingBalance.builder()
+                        .id("test2")
+                        .apartmentNumber("2")
+                        .administrationCharge(1.0)
+                        .monthCharge(2.0)
+                        .lastPaid(3.0)
+                        .totalToPaid(4.0)
+                        .lastBalance(0.0)
+                        .finalCharge(5000000.25)
+                        .legalCharge(5.0)
+                        .interestCharge(0.0)
+                        .date(Instant.now().toEpochMilli())
+                        .interestRate(0.0)
+                        .otherCharge(0.0)
+                        .interestBalance(0.0)
+                        .penaltyCharge(0.0)
+                        .additionalCharge(0.0)
+                        .discount(0.0)
+                        .build()
+        );
+
+        buildingBalanceRepository.saveAll(balanceList).collectList().block();
+
+        // exchange
+        webTestClient.get()
+                .uri("/balance/accountBalance/2")
+                .exchange()
+                .expectStatus()
+                .isOk()
+                .expectBody() // Expect a list of BudgetItemTaskDto
+                .consumeWith(response -> {
+                    var responseBody = response.getResponseBody();
+                    assertNotNull(responseBody);
                 });
     }
 

@@ -49,6 +49,7 @@ CREATE TABLE building_balance (
                                   additional_charge DOUBLE PRECISION,
                                   penalty_charge DOUBLE PRECISION,
                                   legal_charge DOUBLE PRECISION,
+                                  last_balance DOUBLE PRECISION,
                                   other_charge DOUBLE PRECISION,
                                   total_to_paid DOUBLE PRECISION,
                                   discount DOUBLE PRECISION,

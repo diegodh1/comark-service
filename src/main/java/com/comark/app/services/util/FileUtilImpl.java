@@ -63,11 +63,12 @@ public class FileUtilImpl implements FileUtil {
                             .additionalCharge(row.getCell(7).getNumericCellValue())
                             .penaltyCharge(row.getCell(8).getNumericCellValue())
                             .legalCharge(row.getCell(9).getNumericCellValue())
-                            .otherCharge(row.getCell(10).getNumericCellValue())
-                            .totalToPaid(row.getCell(11).getNumericCellValue())
-                            .discount(row.getCell(12).getNumericCellValue())
-                            .lastPaid(row.getCell(13).getNumericCellValue())
-                            .finalCharge(row.getCell(14).getNumericCellValue())
+                            .lastBalance(row.getCell(10).getNumericCellValue())
+                            .otherCharge(row.getCell(11).getNumericCellValue())
+                            .totalToPaid(row.getCell(12).getNumericCellValue())
+                            .discount(row.getCell(13).getNumericCellValue())
+                            .lastPaid(row.getCell(14).getNumericCellValue())
+                            .finalCharge(row.getCell(15).getNumericCellValue())
                             .build();
                     buildingBalanceList.add(item);
                 } catch (Exception e) {

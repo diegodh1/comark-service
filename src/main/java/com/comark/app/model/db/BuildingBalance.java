@@ -24,6 +24,7 @@ public interface BuildingBalance {
     Double penaltyCharge();
     Double legalCharge();
     Double otherCharge();
+    Double lastBalance();
     Double totalToPaid();
     Double discount();
     Double lastPaid();

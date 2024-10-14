@@ -37,6 +37,12 @@ public class BuildingBalanceController {
                 .map(response -> ResponseEntity.ok().body(response));
     }
 
+    @GetMapping(value = "/accountBalance/{apartmentNumber}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public Mono<ResponseEntity> getAccountBalance(@PathVariable String apartmentNumber) {
+        return balanceService.getMonthBalance(apartmentNumber)
+                .map(response -> ResponseEntity.ok().body(response));
+    }
+
     private Mono<byte[]> getByteArray(FilePart filePart) {
         return DataBufferUtils.join(filePart.content())
                 .flatMap(dataBuffer -> {

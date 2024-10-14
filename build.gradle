@@ -55,6 +55,9 @@ dependencies {
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
 
+	implementation group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-guava', version: '2.18.0'
+
+
 	//test
 
 	// JUnit 5 (Jupiter)
