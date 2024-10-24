@@ -5,6 +5,7 @@ import com.comark.app.model.ImmutableSuccess;
 import com.comark.app.model.Success;
 import com.comark.app.model.db.BuildingBalance;
 import com.comark.app.model.dto.balance.BalanceDto;
+import com.comark.app.model.dto.balance.BalanceItemReportDto;
 import com.comark.app.model.dto.balance.ImmutableBalanceDto;
 import com.comark.app.repository.BuildingBalanceRepository;
 import com.comark.app.services.BalanceService;
@@ -46,8 +47,11 @@ public class BalanceServiceImpl implements BalanceService {
     }
 
     @Override
-    public Mono<List<BuildingBalance>> getBalanceReportsByApartmentNumber(String ApartmentNumber) {
-        return balanceRepository.getAllByApartmentNumber(ApartmentNumber).cast(BuildingBalance.class).collectList();
+    public Mono<List<BalanceItemReportDto>> getBalanceReportsByApartmentNumber(String ApartmentNumber) {
+        return balanceRepository.getAllByApartmentNumber(ApartmentNumber)
+                .flatMap(balanceList -> Mono.just(balanceItemMapper.fromBuildingBalanceListToBalanceItemReportDto(balanceList)))
+                .collectList()
+                .switchIfEmpty(Mono.just(List.of()));
     }
 
     @Override

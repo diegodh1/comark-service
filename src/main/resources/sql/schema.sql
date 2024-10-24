@@ -56,3 +56,17 @@ CREATE TABLE building_balance (
                                   last_paid DOUBLE PRECISION,
                                   final_charge DOUBLE PRECISION
 );
+
+CREATE TABLE pqr (
+                     id VARCHAR(255) PRIMARY KEY,
+                     date BIGINT NOT NULL,
+                     property VARCHAR(255) NOT NULL,
+                     user_name VARCHAR(255) NOT NULL,
+                     type VARCHAR(50) NOT NULL,  -- Assuming PqrType is stored as a string; adjust the length if needed
+                     dependency VARCHAR(255) NOT NULL,
+                     assigned_to VARCHAR(255) NOT NULL,
+                     description TEXT NOT NULL,
+                     response TEXT,              -- Nullable field
+                     response_date BIGINT,       -- Nullable field
+                     response_time BIGINT        -- Nullable field
+);

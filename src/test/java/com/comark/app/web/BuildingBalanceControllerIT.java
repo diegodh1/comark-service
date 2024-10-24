@@ -3,6 +3,7 @@ package com.comark.app.web;
 import com.comark.app.model.db.BuildingBalance;
 import com.comark.app.model.db.ImmutableBuildingBalance;
 import com.comark.app.model.dto.balance.BalanceDto;
+import com.comark.app.model.dto.balance.BalanceItemReportDto;
 import com.comark.app.model.dto.balance.ImmutableBalanceDto;
 import com.comark.app.model.dto.budget.ImmutablePresupuestoItemDto;
 import com.comark.app.model.enums.Frecuencia;
@@ -185,9 +186,9 @@ public class BuildingBalanceControllerIT extends IntegrationTestBase {
                 .exchange()
                 .expectStatus()
                 .isOk()
-                .expectBodyList(BuildingBalance.class)  // Expect a list of BudgetItemTaskDto
+                .expectBodyList(BalanceItemReportDto.class)  // Expect a list of BudgetItemTaskDto
                 .consumeWith(response -> {
-                    List<BuildingBalance> responseBody = response.getResponseBody();
+                    List<BalanceItemReportDto> responseBody = response.getResponseBody();
                     assertNotNull(responseBody);  // Ensure the body is not null
                     assertFalse(responseBody.isEmpty());  // Ensure the list is not empty (adjust based on test case)
                     assertEquals(responseBody.size(), 1);  // Ensure it contains tasks

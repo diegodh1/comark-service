@@ -22,7 +22,6 @@ public class LoggingWebFilter implements WebFilter {
         exchange.getRequest().getHeaders().forEach((name, values) -> values.forEach(value ->
                 logger.info("Header '{}': {}", name, value)
         ));
-        exchange.getRequest().getBody().doOnNext(value -> logger.info("Body: {}", value));
 
         return chain.filter(exchange);
     }
