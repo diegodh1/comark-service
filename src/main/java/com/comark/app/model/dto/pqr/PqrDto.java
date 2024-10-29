@@ -19,4 +19,14 @@ public interface PqrDto {
     String dependency();
     String assignedTo();
     String description();
+    @Nullable
+    String status();
+    @Nullable
+    String createdAt();
+    @Nullable
+    String responseDate();
+    @Nullable
+    String response();
+    @Nullable
+    Integer responseTimeInDays();
 }
