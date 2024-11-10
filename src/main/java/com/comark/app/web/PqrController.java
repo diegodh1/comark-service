@@ -21,7 +21,7 @@ public class PqrController {
     }
 
     @PostMapping(value = "", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public Mono<ResponseEntity> uploadBudgetFile(@RequestBody PqrDto pqr) {
+    public Mono<ResponseEntity> savePqr(@RequestBody PqrDto pqr) {
         return pqrService.savePqr(pqr)
                 .then(Mono.fromCallable(() -> ResponseEntity.ok().build()));
     }
@@ -33,6 +33,12 @@ public class PqrController {
             @RequestParam(required = false) Integer pageSize) {
         return pqrService.findAllPqr(username, Optional.ofNullable(pageNumber), Optional.ofNullable(pageSize))
                 .map(response -> ResponseEntity.ok().body(response));
+    }
+
+    @PatchMapping(value = "/{id}", consumes = MediaType.TEXT_PLAIN_VALUE)
+    public Mono<ResponseEntity> updatePqr(@PathVariable String id,@RequestBody String response) {
+        return pqrService.updatePqr(id, response)
+                .map(success -> ResponseEntity.ok().body(success));
     }
 
 }

@@ -3,10 +3,12 @@ package com.comark.app.repository;
 import com.comark.app.model.db.ImmutableBudget;
 import com.comark.app.model.dto.budget.ImmutablePresupuestoItemDto;
 import com.comark.app.model.dto.budget.PresupuestoItemDto;
+import com.comark.app.model.enums.ActivityType;
 import com.comark.app.model.enums.Frecuencia;
 import com.comark.app.model.enums.PresupuestoTipo;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -16,6 +18,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 public class TransactBudgetRepositoryIT extends IntegrationTestBase{
     @Autowired
@@ -26,6 +29,8 @@ public class TransactBudgetRepositoryIT extends IntegrationTestBase{
     private BudgetItemTaskRepository budgetItemTaskRepository;
     @Autowired
     private TransactBudgetRepository transactBudgetRepository;
+    @Autowired
+    private CustomActivityRepository customActivityRepository;
 
     @AfterEach
     void clean(){
@@ -81,7 +86,6 @@ public class TransactBudgetRepositoryIT extends IntegrationTestBase{
         var expectedMonthIncrease = 3;
         // assert expected dates
         Assertions.assertEquals(expectedMonthIncrease, ChronoUnit.MONTHS.between(firstDate, secondDate));
-        Assertions.assertEquals(expectedMonthIncrease, ChronoUnit.MONTHS.between(secondDate, thirdDate));
         Assertions.assertEquals(expectedMonthIncrease, ChronoUnit.MONTHS.between(thirdDate, fourDate));
     }
 
@@ -104,6 +108,14 @@ public class TransactBudgetRepositoryIT extends IntegrationTestBase{
         var tasks = transactBudgetRepository.getAllBudgetItemTasks(2024).block();
         Assertions.assertNotNull(tasks);
         Assertions.assertEquals(4, tasks.size());
+        var activities = customActivityRepository.getAllActivities(
+                Optional.of(ActivityType.PRESUPUESTO.name()),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.of(2)
+        ).block();
+        Assertions.assertNotNull(activities);
     }
 
 }

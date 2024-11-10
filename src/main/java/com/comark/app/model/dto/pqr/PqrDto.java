@@ -13,6 +13,8 @@ import javax.annotation.Nullable;
 @JsonSerialize(as = ImmutablePqrDto.class)
 @JsonDeserialize(as = ImmutablePqrDto.class)
 public interface PqrDto {
+    @Nullable
+    String id();
     String property();
     String userName();
     String type();

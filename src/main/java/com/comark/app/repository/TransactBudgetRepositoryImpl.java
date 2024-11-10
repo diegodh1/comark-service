@@ -7,6 +7,8 @@ import com.comark.app.model.db.*;
 import com.comark.app.model.dto.budget.BudgetItemTaskDto;
 import com.comark.app.model.dto.budget.ImmutableBudgetItemTaskDto;
 import com.comark.app.model.dto.budget.PresupuestoItemDto;
+import com.comark.app.model.enums.ActivityStatus;
+import com.comark.app.model.enums.ActivityType;
 import com.comark.app.model.enums.TaskStatus;
 import lombok.NonNull;
 import org.apache.logging.log4j.core.config.plugins.validation.constraints.NotBlank;
@@ -31,15 +33,17 @@ public class TransactBudgetRepositoryImpl implements TransactBudgetRepository {
     private final BudgetRepository budgetRepository;
     private final BudgetItemRepository budgetItemRepository;
     private final BudgetItemTaskRepository budgetItemTaskRepository;
+    private final ActivityRepository activityRepository;
     private final BudgetItemMapper mapper;
     private static final Logger LOGGER = LoggerFactory.getLogger(TransactBudgetRepositoryImpl.class);
     private final String DATE_FORMAT = "yyyy-MM-dd";
 
 
-    public TransactBudgetRepositoryImpl(BudgetRepository budgetRepository, BudgetItemRepository budgetItemRepository, BudgetItemTaskRepository budgetItemTaskRepository, BudgetItemMapper mapper) {
+    public TransactBudgetRepositoryImpl(BudgetRepository budgetRepository, BudgetItemRepository budgetItemRepository, BudgetItemTaskRepository budgetItemTaskRepository, ActivityRepository activityRepository, BudgetItemMapper mapper) {
         this.budgetRepository = budgetRepository;
         this.budgetItemRepository = budgetItemRepository;
         this.budgetItemTaskRepository = budgetItemTaskRepository;
+        this.activityRepository = activityRepository;
         this.mapper = mapper;
     }
 
@@ -72,7 +76,7 @@ public class TransactBudgetRepositoryImpl implements TransactBudgetRepository {
                         budgetItemTaskMap.computeIfAbsent(task.budgetItemId(), id -> new ArrayList<>()).add(task);
                     }
                     List<BudgetItemTaskDto> budgetItemTaskDtos = new ArrayList<>();
-                    for (Map.Entry<String, BudgetItem> budgetItem: budgetItemMap.entrySet()){
+                    for (Map.Entry<String, BudgetItem> budgetItem : budgetItemMap.entrySet()) {
                         var tasks = budgetItemTaskMap.get(budgetItem.getKey());
                         tasks.forEach(task -> {
                             var scheduleDate = Instant.ofEpochMilli(task.scheduledDate())
@@ -85,6 +89,8 @@ public class TransactBudgetRepositoryImpl implements TransactBudgetRepository {
                                     .actualAccountingAccount(task.actualAccountingAccount())
                                     .actualAmount(task.actualAmount())
                                     .status(task.status().name())
+                                    .name(Optional.ofNullable(task.name()).orElse(""))
+                                    .details(task.details())
                                     .expectedAccountingAccount(budgetItem.getValue().accountingAccount())
                                     .expectedAmount(budgetItem.getValue().expectedFrequencyAmount())
                                     .scheduledDate(scheduleDate.format(formatter))
@@ -96,7 +102,7 @@ public class TransactBudgetRepositoryImpl implements TransactBudgetRepository {
                 });
     }
 
-    private Mono<Budget> createBudget(String actorId, Double budgetAmountFromPreviousYear){
+    private Mono<Budget> createBudget(String actorId, Double budgetAmountFromPreviousYear) {
         return budgetRepository.save(ImmutableBudget.builder()
                 .id(LocalDate.now().getYear())
                 .actorId(actorId)
@@ -120,8 +126,25 @@ public class TransactBudgetRepositoryImpl implements TransactBudgetRepository {
                 .flatMapIterable(this::buildBudgetItemTasks)
                 .collectList()
                 .flatMap(tasks -> Mono.defer(() -> budgetItemTaskRepository.saveAll(tasks).collectList()))
+                .map(this::createActivity)
+                .flatMap(activities -> activityRepository.saveAll(activities).collectList())
                 .then(Mono.just(ImmutableSuccess.builder().success(true).build()));
 
+    }
+
+    private List<Activity> createActivity(List<BudgetItemTask> tasks) {
+        return tasks.stream().map(task -> (Activity) ImmutableActivity.builder()
+                .createdAt(task.scheduledDate())
+                .id(UUID.randomUUID().toString())
+                .activityType(ActivityType.PRESUPUESTO)
+                .originId(task.id())
+                .auxId(task.budgetId().toString())
+                .assignedTo("ADMINISTRADOR")
+                .scheduledDate(task.scheduledDate())
+                .title(Optional.ofNullable(task.name()).orElse(""))
+                .details(Optional.ofNullable(task.details()).orElse(""))
+                .status(ActivityStatus.PENDIENTE)
+                .build()).toList();
     }
 
     private List<BudgetItemTask> buildBudgetItemTasks(BudgetItem budgetItem) {
@@ -141,6 +164,8 @@ public class TransactBudgetRepositoryImpl implements TransactBudgetRepository {
                     .createdAt(currentDate)
                     .updatedAt(currentDate)
                     .status(TaskStatus.SCHEDULED)
+                    .details(budgetItem.detail())
+                    .name(budgetItem.name())
                     .scheduledDate(initialDate.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli())
                     .build();
             tasks.add(task);

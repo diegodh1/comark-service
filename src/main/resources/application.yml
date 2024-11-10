@@ -1,3 +1,13 @@
+server:
+  port: 8081
+keycloak:
+  server_url: ${SERVER_URL:http://localhost:8080}
+  client_id: ${CLIENT_ID:admin-cli}
+  client_secret: ${CLIENT_SECRET:0UmEnWsDRJ65gc5UQylWUj1stI6QN1Bx}
+  username: ${USERNAME_KC:admin}
+  password: ${PASSWORD:admin}
+  realm: ${REALM:comarkapp}
+  realm_master: ${realm_master:master}
 spring:
   application:
     name: ComarkService
@@ -7,6 +17,21 @@ spring:
     password: ${DB_HOST:test}
     pool:
       enabled: true
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8080/realms/comarkapp
+          jwk-set-uri: http://localhost:8080/realms/comarkapp/protocol/openid-connect/certs
+logging:
+  level:
+    org.springframework.web: DEBUG
+    org.springframework.web.filter.CommonsRequestLoggingFilter: DEBUG
+    org.springframework.data.r2dbc.core: DEBUG
+    org.keycloak: DEBUG
+    io.r2dbc.postgresql: DEBUG
+    org.springframework.security: DEBUG
+
 ---
 spring:
   config:
@@ -24,5 +49,7 @@ logging:
     org.springframework.web: DEBUG
     org.springframework.web.filter.CommonsRequestLoggingFilter: DEBUG
     org.springframework.data.r2dbc.core: DEBUG
+    org.keycloak: DEBUG
     io.r2dbc.postgresql: DEBUG
+    org.springframework.security: DEBUG
 

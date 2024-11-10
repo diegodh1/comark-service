@@ -26,6 +26,8 @@ CREATE TABLE "budget_item_task" (
                                     "id" VARCHAR(255) PRIMARY KEY,
                                     "budget_id" INTEGER,
                                     "budget_item_id" VARCHAR(255),
+                                    "name" VARCHAR(255),
+                                    "details" VARCHAR(255),
                                     "actual_amount" DOUBLE PRECISION,
                                     "actual_accounting_account" VARCHAR(255), -- Changed to VARCHAR
                                     "bill_id" VARCHAR(255),
@@ -70,3 +72,18 @@ CREATE TABLE pqr (
                      response_date BIGINT,       -- Nullable field
                      response_time BIGINT        -- Nullable field
 );
+
+CREATE TABLE activity (
+                          id VARCHAR(255) PRIMARY KEY,
+                          origin_id VARCHAR(255) NOT NULL,
+                          activity_type VARCHAR(255) NOT NULL,
+                          aux_id VARCHAR(255),
+                          title VARCHAR(255) NOT NULL,
+                          details TEXT,
+                          assigned_to VARCHAR(255) NOT NULL,
+                          created_at BIGINT NOT NULL,
+                          scheduled_date BIGINT NOT NULL,
+                          closing_date BIGINT,
+                          status VARCHAR(50) NOT NULL
+);
+

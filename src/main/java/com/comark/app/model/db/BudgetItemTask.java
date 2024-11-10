@@ -29,4 +29,8 @@ public interface BudgetItemTask {
     TaskStatus status();
     Long createdAt();
     Long updatedAt();
+    @Nullable
+    String name();
+    @Nullable
+    String details();
 }

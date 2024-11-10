@@ -85,4 +85,31 @@ public class PqrControllerIT extends IntegrationTestBase {
                 });
 
     }
+
+    @Test
+    public void shouldUpdatePqrResponse() {
+        pqrRepository.save(ImmutablePqr.builder()
+                .userName("username")
+                .type(PqrType.PETICION)
+                .description("description")
+                .dependency("dependency")
+                .id("id")
+                .property("property")
+                .assignedTo("assignedTo")
+                .date(Instant.now().toEpochMilli())
+                .build()
+        ).block();
+        webTestClient.patch()
+                .uri("/pqr/id")
+                .contentType(MediaType.TEXT_PLAIN)
+                .bodyValue("sample response")
+                .exchange()
+                .expectStatus()
+                .isOk();
+        var pqr = pqrRepository.getPqrByID("id").block();
+        assertNotNull(pqr);
+        assertEquals("sample response", pqr.response());
+        assertNotNull(pqr.responseDate());
+        assertNotNull(pqr.responseTime());
+    }
 }

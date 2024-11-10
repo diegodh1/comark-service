@@ -20,6 +20,7 @@ public class PqrMapper {
         var responseDate = Optional.ofNullable(pqr.responseDate()).map(PqrMapper::getDate).orElse(LocalDate.now());
         var daysBetween = Math.max(0, ChronoUnit.DAYS.between(createdDate, responseDate));
         return ImmutablePqrDto.builder()
+                .id(pqr.id())
                 .description(pqr.description())
                 .userName(pqr.userName())
                 .assignedTo(pqr.assignedTo())
