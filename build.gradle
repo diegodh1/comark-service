@@ -29,6 +29,8 @@ dependencies {
 	implementation 'org.springframework.security:spring-security-oauth2-resource-server:6.2.3'
 	implementation 'org.springframework.security:spring-security-oauth2-jose:6.2.3'
 	implementation 'org.keycloak:keycloak-admin-client:23.0.4'
+	implementation 'org.keycloak:keycloak-spring-security-adapter:23.0.0'
+	implementation 'org.springframework.boot:spring-boot-starter-mail:3.3.2'
 	implementation 'org.springframework.boot:spring-boot-starter-webflux'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	implementation group: 'org.postgresql', name: 'r2dbc-postgresql', version: '1.0.0.RELEASE'

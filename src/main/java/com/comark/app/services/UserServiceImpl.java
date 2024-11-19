@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 import java.util.Collections;
+import java.util.Optional;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -47,6 +48,7 @@ public class UserServiceImpl implements UserService {
                 .enabled(true)
                 .firstName(user.name())
                 .lastName(user.lastName())
+                .groups(Optional.ofNullable(user.groups()).orElse(Collections.emptyList()))
                 .addCredentials(ImmutableKeycloakCredentialDto.builder().value(user.password()).temporary(false).type("password").build())
                 .build();
     }

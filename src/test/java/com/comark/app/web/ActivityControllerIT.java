@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import org.testcontainers.shaded.com.google.common.net.HttpHeaders;
 
 import java.time.Instant;
 import java.util.List;

@@ -3,12 +3,24 @@ server:
 keycloak:
   server_url: ${SERVER_URL:http://localhost:8080}
   client_id: ${CLIENT_ID:admin-cli}
-  client_secret: ${CLIENT_SECRET:0UmEnWsDRJ65gc5UQylWUj1stI6QN1Bx}
+  client_secret: ${CLIENT_SECRET:Lszl3UnHv8NtlNd0HSPOqvIKtYY2madP}
   username: ${USERNAME_KC:admin}
   password: ${PASSWORD:admin}
   realm: ${REALM:comarkapp}
+  issuer: ${ISSUER:http://localhost:8080/realms/comarkapp}
   realm_master: ${realm_master:master}
 spring:
+  mail:
+    host: sandbox.smtp.mailtrap.io
+    port: 2525
+    username: b9d79b313155f4
+    password: a1498c62918e91
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
   application:
     name: ComarkService
   r2dbc:

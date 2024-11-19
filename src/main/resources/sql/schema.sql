@@ -87,3 +87,51 @@ CREATE TABLE activity (
                           status VARCHAR(50) NOT NULL
 );
 
+CREATE TABLE residential_complex (
+                          id VARCHAR(255) PRIMARY KEY,
+                          created_at BIGINT NOT NULL,
+                          updated_at BIGINT NOT NULL
+);
+
+CREATE TABLE residential_complex_administrator (
+                                    id VARCHAR(255) PRIMARY KEY,
+                                    residential_complex_id VARCHAR(255) NOT NULL,
+                                    email VARCHAR(255) NOT NULL,
+                                    is_active BOOLEAN NOT NULL,
+                                    created_at BIGINT NOT NULL,
+                                    updated_at BIGINT NOT NULL,
+                                    FOREIGN KEY ("residential_complex_id") REFERENCES "residential_complex" ("id"),
+                                    UNIQUE (residential_complex_id, email)
+);
+
+CREATE TABLE residential_complex_item (
+                                          id VARCHAR(255) PRIMARY KEY,
+                                          residential_complex_id VARCHAR(255) NOT NULL,
+                                          name VARCHAR(255) NOT NULL,
+                                          description TEXT,
+                                          type VARCHAR(255) NOT NULL,
+                                          building_number VARCHAR(255),
+                                          parking_number VARCHAR(255),
+                                          storage_room_number VARCHAR(255),
+                                          rent_price DECIMAL(10, 2),
+                                          capacity INT,
+                                          restrictions TEXT,
+                                          FOREIGN KEY ("residential_complex_id") REFERENCES "residential_complex" ("id")
+);
+
+CREATE TABLE residential_complex_item_entity (
+                                                 id VARCHAR(255) PRIMARY KEY,
+                                                 residential_complex_item_id VARCHAR(255) NOT NULL,
+                                                 identification_type VARCHAR(50) NOT NULL,
+                                                 identification_number VARCHAR(100) NOT NULL,
+                                                 type VARCHAR(50) NOT NULL,
+                                                 name VARCHAR(255) NOT NULL,
+                                                 last_name VARCHAR(255),
+                                                 phone_number VARCHAR(20) NOT NULL,
+                                                 email VARCHAR(255) NOT NULL,
+                                                 created_at BIGINT NOT NULL,
+                                                 updated_at BIGINT NOT NULL,
+                                                 is_real_state_agency BOOLEAN NOT NULL,
+                                                 is_active BOOLEAN NOT NULL,
+                                                 UNIQUE (identification_type, identification_number, type)
+);
