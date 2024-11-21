@@ -116,6 +116,7 @@ CREATE TABLE residential_complex_item (
                                           rent_price DECIMAL(10, 2),
                                           capacity INT,
                                           restrictions TEXT,
+                                          UNIQUE (residential_complex_id, building_number, type),
                                           FOREIGN KEY ("residential_complex_id") REFERENCES "residential_complex" ("id")
 );
 

@@ -11,10 +11,12 @@ import com.comark.app.repository.ResidentialComplexItemRepository;
 import com.comark.app.repository.ResidentialComplexRepository;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
@@ -87,6 +89,20 @@ public class ResidentialComplexServiceImpl implements ResidentialComplexService 
     }
 
     @Override
+    public Mono<List<ResidentialComplexItem>> getAllResidentialComplexItemsByResidentialComplexId(String residentialId, Optional<String> apartmentNumber) {
+        return residentialComplexItemRepository.findAllByResidentialComplexId(residentialId, apartmentNumber.orElse(""))
+                .cast(ResidentialComplexItem.class)
+                .collectList();
+    }
+
+    @Override
+    public Mono<List<ResidentialComplexItem>> getAllResidentialComplexItemsByResidentialComplexIdAndEmail(String residentialId, String email) {
+        return residentialComplexItemRepository.findAllByComplexIdAndEmail(residentialId, email)
+                .cast(ResidentialComplexItem.class)
+                .collectList();
+    }
+
+    @Override
     public Mono<List<ResidentialComplexItemEntity>> addResidentialComplexItemEntities(String residentialId, List<ResidentialComplexItemEntityDto> entities) {
         return residentialComplexItemRepository.findResidentialComplexItemById(residentialId)
                 .map(item -> entities.stream().map(entity ->
@@ -99,12 +115,32 @@ public class ResidentialComplexServiceImpl implements ResidentialComplexService 
                                 .type(entity.type())
                                 .identificationNumber(entity.identificationNumber())
                                 .isActive(true)
-                                .isRealStateAgency(entity.isRealStateAgency())
+                                .isRealStateAgency(Optional.ofNullable(entity.isRealStateAgency()).orElse(false))
                                 .lastName(entity.lastName())
                                 .name(entity.name())
                                 .phoneNumber(entity.phoneNumber())
                                 .identificationType(entity.identificationType())
                                 .build()).toList())
-                .flatMap(entityList -> residentialComplexItemEntityRepository.saveAll(entityList).collectList());
+                .flatMap(entityList -> residentialComplexItemEntityRepository.saveAll(entityList).collectList())
+                .flatMap(savedEntities -> {
+                    // Send emails asynchronously
+                    Flux.fromIterable(entities)
+                            .flatMap(entity ->
+                                    emailService.sendEmail(
+                                            entity.email(),
+                                            "Creación de cuenta",
+                                            "Bienvenido a Comarkapp, puede registrar su cuenta en el siguiente link http://localhost:8081"
+                                    )
+                            )
+                            .subscribe(); // Trigger sending emails asynchronously
+                    return Mono.just(savedEntities);
+                });
+    }
+
+    @Override
+    public Mono<List<ResidentialComplexItemEntity>> getAllResidentialItemEntitiesByResidentialItemId(String residentialItemId) {
+        return residentialComplexItemEntityRepository.findAllByResidentialComplexItemId(residentialItemId)
+                .cast(ResidentialComplexItemEntity.class)
+                .collectList();
     }
 }

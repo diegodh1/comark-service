@@ -11,8 +11,8 @@ import javax.annotation.Nullable;
 
 @Table("residential_complex_item")
 @Value.Immutable
-@JsonSerialize(as = ImmutableResidentialComplex.class)
-@JsonDeserialize(as = ImmutableResidentialComplex.class)
+@JsonSerialize(as = ImmutableResidentialComplexItem.class)
+@JsonDeserialize(as = ImmutableResidentialComplexItem.class)
 public interface ResidentialComplexItem {
     @Id
     String id();

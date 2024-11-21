@@ -7,7 +7,7 @@ keycloak:
   username: ${USERNAME_KC:admin}
   password: ${PASSWORD:admin}
   realm: ${REALM:comarkapp}
-  issuer: ${ISSUER:http://localhost:8080/realms/comarkapp}
+  issuer: ${ISSUER:http://14d67312e708.ngrok.app/realms/comarkapp}
   realm_master: ${realm_master:master}
 spring:
   mail:

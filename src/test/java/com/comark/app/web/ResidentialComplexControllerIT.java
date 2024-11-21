@@ -93,7 +93,7 @@ public class ResidentialComplexControllerIT extends IntegrationTestBase {
                 .exchange()
                 .expectStatus()
                 .isOk();
-        var residentialComplexItems = itemRepository.findAllByResidentialComplexId("test").collectList().block();
+        var residentialComplexItems = itemRepository.findAllByResidentialComplexId("test", "101A").collectList().block();
         Assertions.assertNotNull(residentialComplexItems);
         Assertions.assertEquals(2, residentialComplexItems.size());
     }
