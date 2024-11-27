@@ -1,14 +1,9 @@
 package com.comark.app.web;
 
-import com.comark.app.model.db.ImmutableResidentialComplex;
-import com.comark.app.model.db.ImmutableResidentialComplexItem;
-import com.comark.app.model.db.ImmutableResidentialComplexItemEntity;
-import com.comark.app.model.db.ResidentialComplexItemEntity;
+import com.comark.app.model.db.*;
 import com.comark.app.model.dto.pqr.ImmutablePqrDto;
-import com.comark.app.model.dto.residentialComplex.ImmutableResidentialComplexAdministratorDto;
-import com.comark.app.model.dto.residentialComplex.ImmutableResidentialComplexDto;
-import com.comark.app.model.dto.residentialComplex.ImmutableResidentialComplexItemDto;
-import com.comark.app.model.dto.residentialComplex.ImmutableResidentialComplexItemEntityDto;
+import com.comark.app.model.dto.residentialComplex.*;
+import com.comark.app.model.enums.EventStatus;
 import com.comark.app.model.enums.IdentificationType;
 import com.comark.app.model.enums.ResidentialComplexItemEntityType;
 import com.comark.app.model.enums.ResidentialComplexType;
@@ -23,7 +18,11 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.UUID;
 
 public class ResidentialComplexControllerIT extends IntegrationTestBase {
     private WebTestClient webTestClient;
@@ -36,6 +35,8 @@ public class ResidentialComplexControllerIT extends IntegrationTestBase {
     @Autowired
     private ResidentialComplexAdministratorRepository residentialComplexAdministratorRepository;
     @Autowired
+    private ResidentialComplexItemEventRepository residentialComplexItemEventRepository;
+    @Autowired
     private ApplicationContext context;
 
     @BeforeEach
@@ -47,6 +48,7 @@ public class ResidentialComplexControllerIT extends IntegrationTestBase {
     void teardown() {
         residentialComplexItemEntityRepository.deleteAll().block();
         residentialComplexAdministratorRepository.deleteAll().block();
+        residentialComplexItemEventRepository.deleteAll().block();
         itemRepository.deleteAll().block();
         repository.deleteAll().block();
     }
@@ -95,7 +97,7 @@ public class ResidentialComplexControllerIT extends IntegrationTestBase {
                 .isOk();
         var residentialComplexItems = itemRepository.findAllByResidentialComplexId("test", "101A").collectList().block();
         Assertions.assertNotNull(residentialComplexItems);
-        Assertions.assertEquals(2, residentialComplexItems.size());
+        Assertions.assertEquals(1, residentialComplexItems.size());
     }
 
     @Test
@@ -138,6 +140,97 @@ public class ResidentialComplexControllerIT extends IntegrationTestBase {
         var residentialComplexItemEntities = residentialComplexItemEntityRepository.findAllByResidentialComplexItemId("test").collectList().block();
         Assertions.assertNotNull(residentialComplexItemEntities);
         Assertions.assertEquals(1, residentialComplexItemEntities.size());
+    }
+
+    @Test
+    public void shouldAddResidentialComplexItemEvent() {
+        repository.save(ImmutableResidentialComplex
+                .builder()
+                .createdAt(Instant.now().toEpochMilli())
+                .updatedAt(Instant.now().toEpochMilli())
+                .id("test").build()).block();
+
+        itemRepository.save(ImmutableResidentialComplexItem.builder()
+                .id("test")
+                .residentialComplexId("test")
+                .name("name")
+                .type(ResidentialComplexType.APARTAMENTO)
+                .buildingNumber("101A")
+                .build()
+        ).block();
+
+        // Send the POST request
+        webTestClient.post()
+                .uri("/residential-complex/event/test/test")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(ImmutableResidentialComplexEventDto.builder()
+                        .name("name")
+                        .organizerId("organizerId")
+                        .restriction("restriction")
+                        .description("description")
+                        .startDateTime("25/12/2024 14:30:00")
+                        .endDateTime("25/12/2024 16:30:00")
+                        .build())
+                .exchange()
+                .expectStatus()
+                .isOk();
+
+        var events = residentialComplexItemEventRepository.findAllResidentialComplexItemEventsByStatus(EventStatus.PENDIENTE.name(), "test").collectList().block();
+        Assertions.assertNotNull(events);
+        Assertions.assertEquals(1, events.size());
+    }
+
+    @Test
+    public void shouldThrowErrorWhenResidentialComplexItemEventOverlaps() {
+        repository.save(ImmutableResidentialComplex
+                .builder()
+                .createdAt(Instant.now().toEpochMilli())
+                .updatedAt(Instant.now().toEpochMilli())
+                .id("test").build()).block();
+
+        itemRepository.save(ImmutableResidentialComplexItem.builder()
+                .id("test")
+                .residentialComplexId("test")
+                .name("name")
+                .type(ResidentialComplexType.APARTAMENTO)
+                .buildingNumber("101A")
+                .build()
+        ).block();
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy:HH:mm:ss");
+        LocalDateTime startLocalDateTime = LocalDateTime.parse("25/12/2024:14:30:00", formatter);
+        LocalDateTime endLocalDateTime = LocalDateTime.parse("25/12/2024:16:30:00", formatter);
+
+        residentialComplexItemEventRepository.save(ImmutableResidentialComplexItemEvent.builder()
+                .residentialComplexItemId("test")
+                .id(UUID.randomUUID().toString())
+                .residentialComplexId("test")
+                .organizerId("organizerId")
+                .startDateTime(startLocalDateTime.atOffset(ZoneOffset.UTC).toInstant().toEpochMilli())
+                .endDateTime(endLocalDateTime.atOffset(ZoneOffset.UTC).toInstant().toEpochMilli())
+                .description("desc")
+                .eventStatus(EventStatus.APROVADO)
+                .restrictions("restrictions")
+                .name("name")
+                .createdAt(Instant.now().toEpochMilli())
+                .updatedAt(Instant.now().toEpochMilli())
+                .build()).block();
+
+        // Send the POST request
+        webTestClient.post()
+                .uri("/residential-complex/event/test")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(ImmutableResidentialComplexEventDto.builder()
+                        .name("name")
+                        .organizerId("organizerId")
+                        .restriction("restriction")
+                        .description("description")
+                        .startDateTime("25/12/2024:15:30:00")
+                        .endDateTime("25/12/2024:17:30:00")
+                        .build())
+                .exchange()
+                .expectStatus()
+                .isBadRequest();
     }
 
     @Test

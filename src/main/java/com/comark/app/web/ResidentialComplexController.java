@@ -1,10 +1,9 @@
 package com.comark.app.web;
 
 import com.comark.app.exception.ComarkAppException;
-import com.comark.app.model.dto.residentialComplex.ResidentialComplexAdministratorDto;
-import com.comark.app.model.dto.residentialComplex.ResidentialComplexDto;
-import com.comark.app.model.dto.residentialComplex.ResidentialComplexItemDto;
-import com.comark.app.model.dto.residentialComplex.ResidentialComplexItemEntityDto;
+import com.comark.app.model.dto.error.ComarkAppErrorDto;
+import com.comark.app.model.dto.error.ImmutableComarkAppErrorDto;
+import com.comark.app.model.dto.residentialComplex.*;
 import com.comark.app.services.ResidentialComplexService;
 import jakarta.ws.rs.QueryParam;
 import lombok.NonNull;
@@ -30,7 +29,9 @@ public class ResidentialComplexController {
     public Mono<ResponseEntity<Object>> create(@RequestBody ResidentialComplexDto request) {
         return residentialComplexService.createResidentialComplex(request.id())
                 .then(Mono.just(ResponseEntity.ok().build()))
-                .onErrorResume(ComarkAppException.class, error -> Mono.just(ResponseEntity.status(error.getStatusCode()).body(error.getErrorMessage())));
+                .onErrorResume(ComarkAppException.class, error ->
+                        Mono.just(ResponseEntity.status(error.getStatusCode()).body(ImmutableComarkAppErrorDto.builder().code(error.getStatusCode()).message(error.getErrorMessage()).build()))
+                );
         
     }
 
@@ -63,8 +64,38 @@ public class ResidentialComplexController {
         return residentialComplexService.addResidentialComplexAdministrator(id, administrator.email())
                 .then(Mono.just(ResponseEntity.ok().build()))
                 .onErrorResume(ComarkAppException.class, error ->
-                        Mono.just(ResponseEntity.status(error.getStatusCode()).body(error.getErrorMessage()))
+                        Mono.just(ResponseEntity.status(error.getStatusCode()).body(ImmutableComarkAppErrorDto.builder().code(error.getStatusCode()).message(error.getErrorMessage()).build()))
                 );
+    }
+
+    @PostMapping(value = "/event/{residentialComplexId}/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public Mono<ResponseEntity<Object>> createResidentialComplexItemEvent(@PathVariable String residentialComplexId, @PathVariable String id, @RequestBody ResidentialComplexEventDto event) {
+        return residentialComplexService.createResidentialComplexItemEvent(residentialComplexId, id, event.name(), event.description(), event.restriction(), event.startDateTime(), event.endDateTime(), event.organizerId())
+                .then(Mono.just(ResponseEntity.ok().build()))
+                .onErrorResume(ComarkAppException.class, error ->
+                        Mono.just(ResponseEntity.status(error.getStatusCode()).body(ImmutableComarkAppErrorDto.builder().code(error.getStatusCode()).message(error.getErrorMessage()).build()))
+                );
+    }
+
+    @PostMapping(value = "/event/{eventId}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public Mono<ResponseEntity<Object>> updateResidentialComplexItemEvent(@PathVariable String eventId, @RequestBody ResidentialComplexEventUpdateRequestDto event) {
+        return residentialComplexService.updateResidentialComplexItemEventStatus(eventId, event.status())
+                .then(Mono.just(ResponseEntity.ok().build()))
+                .onErrorResume(ComarkAppException.class, error ->
+                        Mono.just(ResponseEntity.status(error.getStatusCode()).body(ImmutableComarkAppErrorDto.builder().code(error.getStatusCode()).message(error.getErrorMessage()).build()))
+                );
+    }
+
+    @GetMapping(value = "/events/{residentialComplexId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public Mono<ResponseEntity> getAllEvents(@PathVariable String residentialComplexId) {
+        return residentialComplexService.getAllPendingEvents(residentialComplexId)
+                .flatMap(items -> Mono.just(ResponseEntity.ok().body(items)));
+    }
+
+    @GetMapping(value = "/zones/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public Mono<ResponseEntity> getAllZonasComunesByResidentialComplexItemId(@PathVariable String id) {
+        return residentialComplexService.getAllResidentialComplexItemsTypeEqualsToZonaComun(id)
+                .flatMap(items -> Mono.just(ResponseEntity.ok().body(items)));
     }
 
     @PostMapping(value = "/{id}/{residentialComplexItemId}", consumes = MediaType.APPLICATION_JSON_VALUE)

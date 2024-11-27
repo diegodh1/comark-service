@@ -12,6 +12,7 @@ import reactor.core.publisher.Mono;
 public interface ResidentialComplexItemRepository extends ReactiveCrudRepository<ResidentialComplexItem, String> {
     @Query("SELECT * FROM residential_complex_item WHERE residential_complex_id = :residentialComplexId AND building_number LIKE CONCAT(:buildingNumber, '%')")
     Flux<ImmutableResidentialComplexItem> findAllByResidentialComplexId(String residentialComplexId, String buildingNumber);
+
     @Query("""
     SELECT DISTINCT residential_complex_item.*
     FROM residential_complex_item
@@ -21,6 +22,10 @@ public interface ResidentialComplexItemRepository extends ReactiveCrudRepository
     AND residential_complex_item_entity.email = :email
 """)
     Flux<ImmutableResidentialComplexItem> findAllByComplexIdAndEmail(String residentialComplexId, String email);
+
     @Query("SELECT * FROM residential_complex_item WHERE id = :id")
     Mono<ImmutableResidentialComplexItem> findResidentialComplexItemById(String id);
+
+    @Query("SELECT * FROM residential_complex_item WHERE residential_complex_id = :residentialComplexId AND type = :type")
+    Flux<ImmutableResidentialComplexItem> findAllResidentialComplexItemByItemType(String residentialComplexId, String type);
 }

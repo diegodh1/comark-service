@@ -134,5 +134,23 @@ CREATE TABLE residential_complex_item_entity (
                                                  updated_at BIGINT NOT NULL,
                                                  is_real_state_agency BOOLEAN NOT NULL,
                                                  is_active BOOLEAN NOT NULL,
-                                                 UNIQUE (identification_type, identification_number, type)
+                                                 UNIQUE (identification_type, identification_number, type),
+                                                 FOREIGN KEY ("residential_complex_item_id") REFERENCES "residential_complex_item" ("id")
+);
+
+CREATE TABLE residential_complex_item_event (
+                                             id VARCHAR(255) PRIMARY KEY, -- Unique identifier for the event
+                                             name VARCHAR(255) NOT NULL, -- Name of the event
+                                             residential_complex_id VARCHAR(255) NOT NULL,
+                                             residential_complex_item_id VARCHAR(255) NOT NULL, -- ID of the associated residential complex item
+                                             organizer_id VARCHAR(255) NOT NULL, -- ID of the event organizer
+                                             description TEXT, -- Description of the event
+                                             restrictions TEXT, -- Restrictions for the event
+                                             start_date_time BIGINT NOT NULL, -- Start date and time as epoch in milliseconds
+                                             end_date_time BIGINT NOT NULL, -- End date and time as epoch in milliseconds
+                                             event_status VARCHAR(50) NOT NULL, -- Status of the event (assuming enum as a string),
+                                             created_at BIGINT NOT NULL,
+                                             updated_at BIGINT NOT NULL,
+                                             FOREIGN KEY ("residential_complex_item_id") REFERENCES "residential_complex_item" ("id"),
+                                             FOREIGN KEY ("residential_complex_id") REFERENCES "residential_complex" ("id")
 );
