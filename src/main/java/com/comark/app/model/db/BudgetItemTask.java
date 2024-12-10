@@ -16,7 +16,7 @@ import javax.annotation.Nullable;
 public interface BudgetItemTask {
     @Id
     String id();
-    Integer budgetId();// Redundant key for querying faster
+    String budgetId();// Redundant key for querying faster
     String budgetItemId(); // Foreign key
     Double actualAmount();
     @Nullable

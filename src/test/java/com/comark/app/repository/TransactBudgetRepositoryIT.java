@@ -1,6 +1,7 @@
 package com.comark.app.repository;
 
 import com.comark.app.model.db.ImmutableBudget;
+import com.comark.app.model.db.ImmutableResidentialComplex;
 import com.comark.app.model.dto.budget.ImmutablePresupuestoItemDto;
 import com.comark.app.model.dto.budget.PresupuestoItemDto;
 import com.comark.app.model.enums.ActivityType;
@@ -31,12 +32,22 @@ public class TransactBudgetRepositoryIT extends IntegrationTestBase{
     private TransactBudgetRepository transactBudgetRepository;
     @Autowired
     private CustomActivityRepository customActivityRepository;
+    @Autowired
+    private ActivityRepository activityRepository;
+    @Autowired
+    private ResidentialComplexRepository residentialComplexRepository;
 
     @AfterEach
     void clean(){
+        activityRepository.deleteAll().block();
         budgetItemTaskRepository.deleteAll().block();
         budgetItemRepository.deleteAll().block();
         budgetRepository.deleteAll().block();
+        residentialComplexRepository.deleteAll().block();
+    }
+    @BeforeEach
+    void setup(){
+        residentialComplexRepository.save(ImmutableResidentialComplex.builder().id("residentialComplexId").createdAt(Instant.now().toEpochMilli()).updatedAt(Instant.now().toEpochMilli()).build()).block();
     }
 
     @Test
@@ -45,12 +56,15 @@ public class TransactBudgetRepositoryIT extends IntegrationTestBase{
         var budget = budgetRepository.save(ImmutableBudget.builder()
                 .createdAt(creationDate)
                 .updatedAt(creationDate)
-                .id(2024)
+                .residentialComplexId("residentialComplexId")
+                .budgetYear(2024)
+                .id("id")
                 .budgetAmountFromPreviousYear(0.0)
                 .actorId("actor_id")
                 .build()).block();
         assert budget != null;
-        Assertions.assertEquals(2024, budget.id());
+        Assertions.assertEquals(2024, budget.budgetYear());
+        Assertions.assertEquals("residentialComplexId", budget.residentialComplexId());
         Assertions.assertEquals("actor_id", budget.actorId());
         Assertions.assertEquals(creationDate, budget.createdAt());
         Assertions.assertEquals(creationDate, budget.updatedAt());
@@ -67,12 +81,14 @@ public class TransactBudgetRepositoryIT extends IntegrationTestBase{
                 .fechaInicio(new Date())
                 .presupuesto(28.0)
                 .build());
-        var response = transactBudgetRepository.transactCreateBudget(presupuestoItemDtos, "actorId", 1500.0)
+        var response = transactBudgetRepository.transactCreateBudget(presupuestoItemDtos,"residentialComplexId", "actorId", 1500.0)
                 .block();
         Assertions.assertNotNull(response);
         Assertions.assertTrue(true);
 
-        var tasks = budgetItemTaskRepository.getAllByBudgetId(2024)
+        var lastBudget = budgetRepository.getLastBudgetByResidentialComplexId("residentialComplexId").block();
+        Assertions.assertNotNull(lastBudget);
+        var tasks = budgetItemTaskRepository.getAllByBudgetId(lastBudget.id())
                 .collectList().block();
         Assertions.assertNotNull(tasks);
         Assertions.assertEquals(4, tasks.size());
@@ -100,12 +116,13 @@ public class TransactBudgetRepositoryIT extends IntegrationTestBase{
                 .fechaInicio(new Date())
                 .presupuesto(28.0)
                 .build());
-        var response = transactBudgetRepository.transactCreateBudget(presupuestoItemDtos, "actorId", 1500.0)
+        var response = transactBudgetRepository.transactCreateBudget(presupuestoItemDtos,"residentialComplexId", "actorId", 1500.0)
                 .block();
         Assertions.assertNotNull(response);
         Assertions.assertTrue(true);
-
-        var tasks = transactBudgetRepository.getAllBudgetItemTasks(2024).block();
+        var lastBudget = budgetRepository.getLastBudgetByResidentialComplexId("residentialComplexId").block();
+        Assertions.assertNotNull(lastBudget);
+        var tasks = transactBudgetRepository.getAllBudgetItemTasks(lastBudget.id()).block();
         Assertions.assertNotNull(tasks);
         Assertions.assertEquals(4, tasks.size());
         var activities = customActivityRepository.getAllActivities(

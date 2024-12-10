@@ -10,8 +10,8 @@ import reactor.core.publisher.Mono;
 import java.util.List;
 
 public interface BalanceService {
-    Mono<Success> upsertBalance(byte[] file, String actorId);
-    Mono<List<BuildingBalance>> getAllBalanceReports();
-    Mono<List<BalanceItemReportDto>> getBalanceReportsByApartmentNumber(String ApartmentNumber);
-    Mono<BalanceDto> getMonthBalance(String apartmentNumber);
+    Mono<Success> upsertBalance(byte[] file, String actorId, String residentialComplexId);
+    Mono<List<BuildingBalance>> getAllBalanceReports(String residentialComplexId);
+    Mono<List<BalanceItemReportDto>> getBalanceReportsByApartmentNumber(String residentialComplexId,String ApartmentNumber);
+    Mono<BalanceDto> getMonthBalance(String residentialComplexId,String apartmentNumber);
 }

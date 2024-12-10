@@ -11,7 +11,7 @@ import reactor.core.publisher.Mono;
 @Repository
 public interface BudgetItemTaskRepository extends ReactiveCrudRepository<BudgetItemTask, String> {
     @Query("SELECT * FROM budget_item_task WHERE budget_id = :id ORDER BY scheduled_date ASC")
-    Flux<ImmutableBudgetItemTask> getAllByBudgetId(Integer id);
+    Flux<ImmutableBudgetItemTask> getAllByBudgetId(String id);
 
     @Query("SELECT * FROM budget_item_task WHERE status = 'SCHEDULED' AND budget_id = :id")
     Flux<ImmutableBudgetItemTask> findByStatusIsScheduled(Integer id);

@@ -22,23 +22,23 @@ public class BudgetController {
         this.reportService = reportService;
     }
 
-    @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public Mono<ResponseEntity> uploadBudgetFile(@RequestPart(value = "file") FilePart excelFile) {
+    @PostMapping(value = "/upload/{residentialComplexId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public Mono<ResponseEntity> uploadBudgetFile(@RequestPart(value = "file") FilePart excelFile, @PathVariable @NonNull String residentialComplexId) {
         return Mono.justOrEmpty(excelFile)
                 .switchIfEmpty(Mono.error(new IllegalArgumentException("invalid File")))
                 .flatMap(this::getByteArray)
-                .flatMap(file -> budgetService.upsertBudget(file, "actorId"))
+                .flatMap(file -> budgetService.upsertBudget(file, residentialComplexId))
                 .map(success -> ResponseEntity.ok().build());
     }
 
     @GetMapping(value = "/{budgetId}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Mono<ResponseEntity> getAllTasksByBudget(@PathVariable @NonNull Integer budgetId) {
+    public Mono<ResponseEntity> getAllTasksByBudget(@PathVariable @NonNull String budgetId) {
         return budgetService.getAllBudgetItemTasks(budgetId)
                 .map(response -> ResponseEntity.ok().body(response));
     }
 
     @GetMapping(value = "/report/{budgetId}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Mono<ResponseEntity> getBudgetReport(@PathVariable @NonNull Integer budgetId) {
+    public Mono<ResponseEntity> getBudgetReport(@PathVariable @NonNull String budgetId) {
         return reportService.getReport(budgetId)
                 .map(response -> ResponseEntity.ok().body(response));
     }

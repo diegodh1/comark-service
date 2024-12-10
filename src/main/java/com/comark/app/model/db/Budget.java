@@ -8,8 +8,10 @@ import org.springframework.data.relational.core.mapping.Table;
 @Value.Immutable
 public interface Budget {
     @Id
-    Integer id();
+    String id();
     String actorId();
+    Integer budgetYear();
+    String residentialComplexId();
     Double budgetAmountFromPreviousYear();
     Long createdAt();
     Long updatedAt();

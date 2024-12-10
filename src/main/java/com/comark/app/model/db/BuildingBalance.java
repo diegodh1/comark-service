@@ -13,6 +13,7 @@ import org.springframework.data.relational.core.mapping.Table;
 public interface BuildingBalance {
     @Id
     String id();
+    String residentialComplexId();
     String apartmentNumber();
     Long date();
     Double administrationCharge();

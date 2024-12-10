@@ -43,6 +43,8 @@ public class ResidentialComplexControllerIT extends IntegrationTestBase {
     @Autowired
     private ResidentialComplexItemEventRepository residentialComplexItemEventRepository;
     @Autowired
+    private ActivityRepository activityRepository;
+    @Autowired
     private ApplicationContext context;
 
     @BeforeEach
@@ -52,6 +54,7 @@ public class ResidentialComplexControllerIT extends IntegrationTestBase {
 
     @AfterEach
     void teardown() {
+        activityRepository.deleteAll().block();
         residentialComplexItemEntityRepository.deleteAll().block();
         residentialComplexAdministratorRepository.deleteAll().block();
         residentialComplexItemEventRepository.deleteAll().block();

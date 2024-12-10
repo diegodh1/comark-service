@@ -36,7 +36,7 @@ public class FileUtilImpl implements FileUtil {
     }
 
     @Override
-    public Mono<List<BuildingBalance>> loadBuildingBalanceFromFile(byte[] fileBytes) {
+    public Mono<List<BuildingBalance>> loadBuildingBalanceFromFile(byte[] fileBytes,String residentialComplexId) {
         List<BuildingBalance> buildingBalanceList = new ArrayList<>();
         List<String> errors = new ArrayList<>();
         try (ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(fileBytes)) {
@@ -74,6 +74,7 @@ public class FileUtilImpl implements FileUtil {
                             .discount(row.getCell(13).getNumericCellValue())
                             .lastPaid(row.getCell(14).getNumericCellValue())
                             .finalCharge(row.getCell(15).getNumericCellValue())
+                            .residentialComplexId(residentialComplexId)
                             .build();
                     buildingBalanceList.add(item);
                 } catch (Exception e) {

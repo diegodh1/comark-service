@@ -28,7 +28,7 @@ public class FileUtilImplTest {
     @Test
     public void shouldReadBuildingBalanceExcelFileSuccessfully() throws IOException {
         byte[] file = getBuildingFileFromResources("building_test_file.xlsx");
-        StepVerifier.create(budgetUtil.loadBuildingBalanceFromFile(file))
+        StepVerifier.create(budgetUtil.loadBuildingBalanceFromFile(file, "residentialComplexId"))
                 .assertNext(budget -> Assertions.assertEquals(5, budget.size()))
                 .verifyComplete();
     }

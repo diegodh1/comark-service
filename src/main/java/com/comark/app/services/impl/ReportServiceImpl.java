@@ -41,16 +41,16 @@ public class ReportServiceImpl implements ReportService {
 
 
     @Override
-    public Mono<Map<String, List<ReportValueDto>>> getReport(@NonNull Integer budgetId) {
+    public Mono<Map<String, List<ReportValueDto>>> getReport(@NonNull String budgetId) {
         return Mono.zip(getAllBudgetItems(budgetId).collectList(), getAllBudgetItemTasks(budgetId).collectList(), budgetRepository.getBudgetById(budgetId))
                 .flatMap(tuple -> Mono.just(getReportHelper(tuple.getT1(), tuple.getT2())))
                 .doOnError(error -> LOGGER.error(error.getMessage(), error));
     }
 
-    public Flux<BudgetItem> getAllBudgetItems(Integer budgetId) {
+    public Flux<BudgetItem> getAllBudgetItems(String budgetId) {
         return budgetItemRepository.getAllByBudgetId(budgetId).cast(BudgetItem.class);
     }
-    public Flux<BudgetItemTask> getAllBudgetItemTasks(Integer budgetId) {
+    public Flux<BudgetItemTask> getAllBudgetItemTasks(String budgetId) {
         return budgetItemTaskRepository.getAllByBudgetId(budgetId).cast(BudgetItemTask.class);
     }
 

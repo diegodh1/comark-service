@@ -1,14 +1,23 @@
-CREATE TABLE "budget" (
-                          "id" INTEGER PRIMARY KEY,
-                          "actor_id" VARCHAR(255),
-                          "budget_amount_from_previous_year" DOUBLE PRECISION,
-                          "created_at" BIGINT,
-                          "updated_at" BIGINT
+CREATE TABLE budget (
+                          id VARCHAR(255) PRIMARY KEY,
+                          budget_year INTEGER NOT NULL,
+                          residential_complex_id VARCHAR(255) NOT NULL,
+                          actor_id VARCHAR(255),
+                          budget_amount_from_previous_year DOUBLE PRECISION,
+                          created_at BIGINT,
+                          updated_at BIGINT,
+                          UNIQUE (budget_year, residential_complex_id)
+);
+
+CREATE TABLE residential_complex (
+                                     id VARCHAR(255) PRIMARY KEY,
+                                     created_at BIGINT NOT NULL,
+                                     updated_at BIGINT NOT NULL
 );
 
 CREATE TABLE "budget_item" (
                                "id" VARCHAR(255) PRIMARY KEY,
-                               "budget_id" INTEGER,
+                               "budget_id" VARCHAR(255),
                                "type" VARCHAR(255),
                                "name" VARCHAR(255),
                                "detail" VARCHAR(255),
@@ -24,7 +33,7 @@ CREATE TABLE "budget_item" (
 
 CREATE TABLE "budget_item_task" (
                                     "id" VARCHAR(255) PRIMARY KEY,
-                                    "budget_id" INTEGER,
+                                    "budget_id" VARCHAR(255),
                                     "budget_item_id" VARCHAR(255),
                                     "name" VARCHAR(255),
                                     "details" VARCHAR(255),
@@ -40,7 +49,8 @@ CREATE TABLE "budget_item_task" (
 );
 
 CREATE TABLE building_balance (
-                                  "id" VARCHAR(255) PRIMARY KEY,
+                                  id VARCHAR(255) PRIMARY KEY,
+                                  residential_complex_id VARCHAR(255) NOT NULL,
                                   apartment_number VARCHAR(255) NOT NULL,
                                   date BIGINT NOT NULL,
                                   administration_charge DOUBLE PRECISION,
@@ -56,7 +66,8 @@ CREATE TABLE building_balance (
                                   total_to_paid DOUBLE PRECISION,
                                   discount DOUBLE PRECISION,
                                   last_paid DOUBLE PRECISION,
-                                  final_charge DOUBLE PRECISION
+                                  final_charge DOUBLE PRECISION,
+                                  FOREIGN KEY (residential_complex_id) REFERENCES residential_complex (id)
 );
 
 CREATE TABLE pqr (
@@ -73,9 +84,11 @@ CREATE TABLE pqr (
                      response_time BIGINT        -- Nullable field
 );
 
+
 CREATE TABLE activity (
                           id VARCHAR(255) PRIMARY KEY,
                           origin_id VARCHAR(255) NOT NULL,
+                          residential_complex_id VARCHAR(255) NOT NULL,
                           activity_type VARCHAR(255) NOT NULL,
                           aux_id VARCHAR(255),
                           title VARCHAR(255) NOT NULL,
@@ -84,13 +97,8 @@ CREATE TABLE activity (
                           created_at BIGINT NOT NULL,
                           scheduled_date BIGINT NOT NULL,
                           closing_date BIGINT,
-                          status VARCHAR(50) NOT NULL
-);
-
-CREATE TABLE residential_complex (
-                          id VARCHAR(255) PRIMARY KEY,
-                          created_at BIGINT NOT NULL,
-                          updated_at BIGINT NOT NULL
+                          status VARCHAR(50) NOT NULL,
+                          FOREIGN KEY (residential_complex_id) REFERENCES residential_complex (id)
 );
 
 CREATE TABLE residential_complex_administrator (

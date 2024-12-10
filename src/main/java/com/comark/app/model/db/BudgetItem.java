@@ -11,7 +11,7 @@ import javax.annotation.Nullable;
 public interface BudgetItem {
     @Id
     String id();
-    Integer budgetId(); // Foreign key
+    String budgetId(); // Foreign key
     String type();
     String name();
     @Nullable

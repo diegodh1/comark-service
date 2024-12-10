@@ -105,7 +105,7 @@ public class ResidentialComplexController {
     }
 
     @PostMapping(value = "/upload/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public Mono<ResponseEntity<Object>> uploadBudgetFile(@PathVariable String id, @RequestPart(value = "file") FilePart excelFile) {
+    public Mono<ResponseEntity<Object>> loadAndUpsertResidentialComplexInformation(@PathVariable String id, @RequestPart(value = "file") FilePart excelFile) {
         return Mono.justOrEmpty(excelFile)
                 .switchIfEmpty(Mono.error(new IllegalArgumentException("invalid File")))
                 .flatMap(this::getByteArray)

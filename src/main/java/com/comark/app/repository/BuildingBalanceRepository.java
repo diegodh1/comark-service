@@ -12,12 +12,12 @@ import reactor.core.publisher.Mono;
 
 public interface BuildingBalanceRepository extends ReactiveCrudRepository<BuildingBalance, Integer> {
 
-    @Query("SELECT * FROM building_balance")
-    Flux<ImmutableBuildingBalance> getAllApartments();
+    @Query("SELECT * FROM building_balance where residential_complex_id = :residentialComplexId")
+    Flux<ImmutableBuildingBalance> getAllApartmentsByResidentialComplexId(String residentialComplexId);
 
-    @Query("SELECT * FROM building_balance where apartment_number = :apartmentNumber")
-    Flux<ImmutableBuildingBalance> getAllByApartmentNumber(String apartmentNumber);
+    @Query("SELECT * FROM building_balance where residential_complex_id = :residentialComplexId AND apartment_number = :apartmentNumber")
+    Flux<ImmutableBuildingBalance> getAllByApartmentNumber(String residentialComplexId, String apartmentNumber);
 
-    @Query("SELECT * FROM building_balance WHERE apartment_number = :apartmentNumber ORDER BY date DESC LIMIT 1")
-    Mono<ImmutableBuildingBalance> getLastBalanceByApartment(String apartmentNumber);
+    @Query("SELECT * FROM building_balance WHERE residential_complex_id = :residentialComplexId AND apartment_number = :apartmentNumber ORDER BY date DESC LIMIT 1")
+    Mono<ImmutableBuildingBalance> getLastBalanceByApartment(String residentialComplexId, String apartmentNumber);
 }

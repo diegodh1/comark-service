@@ -16,30 +16,30 @@ public class BuildingBalanceController {
         this.balanceService = balanceService;
     }
 
-    @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public Mono<ResponseEntity> uploadBudgetFile(@RequestPart(value = "file") FilePart excelFile) {
+    @PostMapping(value = "/upload/{residentialComplexId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public Mono<ResponseEntity> uploadBudgetFile(@RequestPart(value = "file") FilePart excelFile, @PathVariable String residentialComplexId) {
         return Mono.justOrEmpty(excelFile)
                 .switchIfEmpty(Mono.error(new IllegalArgumentException("invalid File")))
                 .flatMap(this::getByteArray)
-                .flatMap(file -> balanceService.upsertBalance(file, "actorId"))
+                .flatMap(file -> balanceService.upsertBalance(file, "actorId", residentialComplexId))
                 .map(success -> ResponseEntity.ok().build());
     }
 
-    @GetMapping(value = "", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Mono<ResponseEntity> getAll() {
-        return balanceService.getAllBalanceReports()
+    @GetMapping(value = "/{residentialComplexId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public Mono<ResponseEntity> getAll(@PathVariable String residentialComplexId) {
+        return balanceService.getAllBalanceReports(residentialComplexId)
                 .map(response -> ResponseEntity.ok().body(response));
     }
 
-    @GetMapping(value = "/{apartmentNumber}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Mono<ResponseEntity> getAll(@PathVariable String apartmentNumber) {
-        return balanceService.getBalanceReportsByApartmentNumber(apartmentNumber)
+    @GetMapping(value = "/{residentialComplexId}/{apartmentNumber}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public Mono<ResponseEntity> getAll(@PathVariable String residentialComplexId, @PathVariable String apartmentNumber) {
+        return balanceService.getBalanceReportsByApartmentNumber(residentialComplexId, apartmentNumber)
                 .map(response -> ResponseEntity.ok().body(response));
     }
 
-    @GetMapping(value = "/accountBalance/{apartmentNumber}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Mono<ResponseEntity> getAccountBalance(@PathVariable String apartmentNumber) {
-        return balanceService.getMonthBalance(apartmentNumber)
+    @GetMapping(value = "/accountBalance/{residentialComplexId}/{apartmentNumber}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public Mono<ResponseEntity> getAccountBalance(@PathVariable String residentialComplexId, @PathVariable String apartmentNumber) {
+        return balanceService.getMonthBalance(residentialComplexId, apartmentNumber)
                 .map(response -> ResponseEntity.ok().body(response));
     }
 

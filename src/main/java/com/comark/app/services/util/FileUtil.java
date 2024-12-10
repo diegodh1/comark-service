@@ -9,6 +9,6 @@ import java.util.List;
 
 public interface FileUtil {
     Mono<List<PresupuestoItemDto>> loadBudgetFromFile(byte[] fileBytes);
-    Mono<List<BuildingBalance>> loadBuildingBalanceFromFile(byte[] fileBytes);
+    Mono<List<BuildingBalance>> loadBuildingBalanceFromFile(byte[] fileBytes, String residentialComplexId);
     Mono<List<ResidentialComplexItemOwnerDto>> loadResidentialComplexItemOwnerFromFile(byte[] fileBytes);
 }

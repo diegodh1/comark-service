@@ -49,15 +49,15 @@ public class TransactBudgetRepositoryImpl implements TransactBudgetRepository {
 
     @Override
     @Transactional
-    public Mono<Success> transactCreateBudget(List<PresupuestoItemDto> budgetItems, @NotBlank String actorId, @NonNull Double budgetAmountFromPreviousYear) {
-        return createBudget(actorId, budgetAmountFromPreviousYear)
+    public Mono<Success> transactCreateBudget(List<PresupuestoItemDto> budgetItems, @NotBlank String residentialComplexId, @NotBlank String actorId, @NonNull Double budgetAmountFromPreviousYear) {
+        return createBudget(actorId, budgetAmountFromPreviousYear, residentialComplexId)
                 .flatMap(budget -> batchInsertBudgetItem(budget, budgetItems))
-                .flatMap(this::batchInsertBudgetItemTask)
+                .flatMap(tasks -> batchInsertBudgetItemTask(tasks, residentialComplexId))
                 .doOnError(error -> LOGGER.error(error.getMessage(), error));
     }
 
     @Override
-    public Mono<List<BudgetItemTaskDto>> getAllBudgetItemTasks(@NonNull Integer budgetId) {
+    public Mono<List<BudgetItemTaskDto>> getAllBudgetItemTasks(@NonNull String budgetId) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         return Mono.zip(budgetItemRepository.getAllByBudgetId(budgetId).collectList(), budgetItemTaskRepository.getAllByBudgetId(budgetId).collectList())
                 .flatMap(results -> {
@@ -102,9 +102,11 @@ public class TransactBudgetRepositoryImpl implements TransactBudgetRepository {
                 });
     }
 
-    private Mono<Budget> createBudget(String actorId, Double budgetAmountFromPreviousYear) {
+    private Mono<Budget> createBudget(String actorId, Double budgetAmountFromPreviousYear, String residentialComplexId) {
         return budgetRepository.save(ImmutableBudget.builder()
-                .id(LocalDate.now().getYear())
+                .id(UUID.randomUUID().toString())
+                .budgetYear(LocalDate.now().getYear())
+                .residentialComplexId(residentialComplexId)
                 .actorId(actorId)
                 .createdAt(Instant.now().toEpochMilli())
                 .updatedAt(Instant.now().toEpochMilli())
@@ -121,23 +123,24 @@ public class TransactBudgetRepositoryImpl implements TransactBudgetRepository {
 
     }
 
-    private Mono<Success> batchInsertBudgetItemTask(List<ImmutableBudgetItem> budgetItems) {
+    private Mono<Success> batchInsertBudgetItemTask(List<ImmutableBudgetItem> budgetItems, String residentialComplexId) {
         return Flux.fromIterable(budgetItems)
-                .flatMapIterable(this::buildBudgetItemTasks)
+                .flatMapIterable(items -> buildBudgetItemTasks(residentialComplexId, items))
                 .collectList()
                 .flatMap(tasks -> Mono.defer(() -> budgetItemTaskRepository.saveAll(tasks).collectList()))
-                .map(this::createActivity)
+                .map(tasks -> createActivity(tasks, residentialComplexId))
                 .flatMap(activities -> activityRepository.saveAll(activities).collectList())
                 .then(Mono.just(ImmutableSuccess.builder().success(true).build()));
 
     }
 
-    private List<Activity> createActivity(List<BudgetItemTask> tasks) {
+    private List<Activity> createActivity(List<BudgetItemTask> tasks, String residentialComplexId) {
         return tasks.stream().map(task -> (Activity) ImmutableActivity.builder()
                 .createdAt(task.scheduledDate())
                 .id(UUID.randomUUID().toString())
                 .activityType(ActivityType.PRESUPUESTO)
                 .originId(task.id())
+                .residentialComplexId(residentialComplexId)
                 .auxId(task.budgetId().toString())
                 .assignedTo("ADMINISTRADOR")
                 .scheduledDate(task.scheduledDate())
@@ -147,7 +150,7 @@ public class TransactBudgetRepositoryImpl implements TransactBudgetRepository {
                 .build()).toList();
     }
 
-    private List<BudgetItemTask> buildBudgetItemTasks(BudgetItem budgetItem) {
+    private List<BudgetItemTask> buildBudgetItemTasks(String residentialComplexId, BudgetItem budgetItem) {
         Long currentDate = Instant.now().toEpochMilli();
         List<BudgetItemTask> tasks = new ArrayList<>();
         int frequency = budgetItem.frequency();

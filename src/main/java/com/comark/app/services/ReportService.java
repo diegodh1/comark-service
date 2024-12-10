@@ -8,5 +8,5 @@ import java.util.List;
 import java.util.Map;
 
 public interface ReportService {
-    Mono<Map<String, List<ReportValueDto>>> getReport(@NonNull Integer budgetId);
+    Mono<Map<String, List<ReportValueDto>>> getReport(@NonNull String budgetId);
 }

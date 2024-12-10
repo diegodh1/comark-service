@@ -10,5 +10,5 @@ import reactor.core.publisher.Flux;
 @Repository
 public interface BudgetItemRepository extends ReactiveCrudRepository<BudgetItem, String> {
     @Query("SELECT * FROM budget_item WHERE budget_id = :id")
-    Flux<ImmutableBudgetItem> getAllByBudgetId(Integer id);
+    Flux<ImmutableBudgetItem> getAllByBudgetId(String id);
 }

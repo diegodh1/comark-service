@@ -45,17 +45,18 @@ public class BalanceServiceImpl implements BalanceService {
     }
 
     @Override
-    public Mono<Success> upsertBalance(byte[] file, String actorId) {
+    public Mono<Success> upsertBalance(byte[] file, String actorId, String residentialComplexId) {
         var localDateTime = LocalDate.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
-        return fileUtil.loadBuildingBalanceFromFile(file)
+        return fileUtil.loadBuildingBalanceFromFile(file, residentialComplexId)
                 .flatMap(buildingBalances -> balanceRepository.saveAll(buildingBalances).collectList())
                 .flatMap(ignore -> activityRepository.save(ImmutableActivity.builder()
                         .originId(String.format("building balance - %s", localDateTime.format(formatter)))
                         .auxId(localDateTime.format(formatter))
                         .scheduledDate(Instant.now().toEpochMilli())
                         .assignedTo("ADMINISTRADOR")
+                        .residentialComplexId(residentialComplexId)
                         .closingDate(Instant.now().toEpochMilli())
                         .createdAt(Instant.now().toEpochMilli())
                         .id(UUID.randomUUID().toString())
@@ -69,21 +70,21 @@ public class BalanceServiceImpl implements BalanceService {
     }
 
     @Override
-    public Mono<List<BuildingBalance>> getAllBalanceReports() {
-        return balanceRepository.getAllApartments().cast(BuildingBalance.class).collectList();
+    public Mono<List<BuildingBalance>> getAllBalanceReports(String residentialComplexId) {
+        return balanceRepository.getAllApartmentsByResidentialComplexId(residentialComplexId).cast(BuildingBalance.class).collectList();
     }
 
     @Override
-    public Mono<List<BalanceItemReportDto>> getBalanceReportsByApartmentNumber(String ApartmentNumber) {
-        return balanceRepository.getAllByApartmentNumber(ApartmentNumber)
+    public Mono<List<BalanceItemReportDto>> getBalanceReportsByApartmentNumber(String residentialComplexId, String ApartmentNumber) {
+        return balanceRepository.getAllByApartmentNumber(residentialComplexId, ApartmentNumber)
                 .flatMap(balanceList -> Mono.just(balanceItemMapper.fromBuildingBalanceListToBalanceItemReportDto(balanceList)))
                 .collectList()
                 .switchIfEmpty(Mono.just(List.of()));
     }
 
     @Override
-    public Mono<BalanceDto> getMonthBalance(String apartmentNumber) {
-        return balanceRepository.getLastBalanceByApartment(apartmentNumber)
+    public Mono<BalanceDto> getMonthBalance(String residentialComplexId, String apartmentNumber) {
+        return balanceRepository.getLastBalanceByApartment(residentialComplexId, apartmentNumber)
                 .flatMap(lastBalance -> Mono.just(balanceItemMapper.fromBuildingBalance(lastBalance)))
                 .switchIfEmpty(Mono.just(emptyBalanceDto(apartmentNumber)))
                 .cast(BalanceDto.class);

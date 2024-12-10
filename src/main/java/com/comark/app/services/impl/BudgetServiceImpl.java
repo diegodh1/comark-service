@@ -33,17 +33,17 @@ public class BudgetServiceImpl implements BudgetService {
     }
 
     @Override
-    public Mono<Success> upsertBudget(byte[] file, String actorId) {
+    public Mono<Success> upsertBudget(byte[] file, String residentialComplexId) {
         return fileUtil.loadBudgetFromFile(file)
                 .flatMap(budgetList -> Mono.just(Tuples.of(
                         budgetList.stream().filter(it -> !it.getNombre().equals("EXCENDENTES AÑOS ANTERIORES")).collect(Collectors.toList()),
                         getBudgetFromPreviousYear(budgetList))))
-                .flatMap(tuple2 -> transactBudgetRepository.transactCreateBudget(tuple2.getT1(), actorId, tuple2.getT2()))
+                .flatMap(tuple2 -> transactBudgetRepository.transactCreateBudget(tuple2.getT1(), residentialComplexId, "actorId", tuple2.getT2()))
                 .doOnError(error -> LOGGER.error(error.getMessage(), error));
     }
 
     @Override
-    public Mono<List<BudgetItemTaskDto>> getAllBudgetItemTasks(Integer budgetId) {
+    public Mono<List<BudgetItemTaskDto>> getAllBudgetItemTasks(String budgetId) {
         return transactBudgetRepository.getAllBudgetItemTasks(budgetId);
     }
 

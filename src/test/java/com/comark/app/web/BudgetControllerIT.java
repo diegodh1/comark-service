@@ -1,6 +1,7 @@
 package com.comark.app.web;
 
 import com.comark.app.model.db.ImmutableBudgetItem;
+import com.comark.app.model.db.ImmutableResidentialComplex;
 import com.comark.app.model.dto.budget.*;
 import com.comark.app.model.enums.Frecuencia;
 import com.comark.app.model.enums.PresupuestoTipo;
@@ -21,6 +22,7 @@ import org.springframework.web.reactive.function.BodyInserters;
 import reactor.core.publisher.Mono;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -45,35 +47,43 @@ public class BudgetControllerIT extends IntegrationTestBase {
     private TransactBudgetRepository transactBudgetRepository;
     @Autowired
     private BudgetService budgetService;
+    @Autowired
+    private ResidentialComplexRepository residentialComplexRepository;
+    @Autowired
+    private ActivityRepository activityRepository;
 
     @BeforeEach
     void setup(){
+        residentialComplexRepository.save(ImmutableResidentialComplex.builder().id("residentialComplexId").createdAt(Instant.now().toEpochMilli()).updatedAt(Instant.now().toEpochMilli()).build()).block();
         webTestClient = WebTestClient.bindToApplicationContext(context).build();
     }
 
     @AfterEach
     void clean(){
+        activityRepository.deleteAll().block();
         budgetItemTaskRepository.deleteAll().block();
         budgetItemRepository.deleteAll().block();
         budgetRepository.deleteAll().block();
+        residentialComplexRepository.deleteAll().block();
     }
 
     @Test
     public void shouldCreateBudgetFromFileSuccessfully() throws IOException {
         // Send the POST request with the file
         webTestClient.post()
-                .uri("/budget/upload")
+                .uri("/budget/upload/residentialComplexId")
                 .contentType(MediaType.MULTIPART_FORM_DATA)
                 .body(BodyInserters.fromMultipartData(createMultipartBodyBuilder().build()))
                 .exchange()
                 .expectStatus()
                 .isOk();
 
-        var budget = budgetRepository.getBudgetById(2024).block();
-        assert budget != null;
-        Assertions.assertEquals(budget.id(), 2024);
-        Assertions.assertEquals(budget.budgetAmountFromPreviousYear(), -15000000.0);
-        var budgetItems = budgetItemRepository.getAllByBudgetId(2024).collectList().block();
+        var lastBudget = budgetRepository.getLastBudgetByResidentialComplexId("residentialComplexId").block();
+        assert lastBudget != null;
+        Assertions.assertEquals(lastBudget.budgetYear(), 2024);
+        Assertions.assertEquals(lastBudget.residentialComplexId(), "residentialComplexId");
+        Assertions.assertEquals(lastBudget.budgetAmountFromPreviousYear(), -15000000.0);
+        var budgetItems = budgetItemRepository.getAllByBudgetId(lastBudget.id()).collectList().block();
         assert budgetItems != null;
         Assertions.assertEquals(budgetItems.size(), 15);
     }
@@ -89,11 +99,13 @@ public class BudgetControllerIT extends IntegrationTestBase {
                 .fechaInicio(new Date())
                 .presupuesto(28.0)
                 .build());
-        transactBudgetRepository.transactCreateBudget(presupuestoItemDtos, "actorId", 1500.0)
+        transactBudgetRepository.transactCreateBudget(presupuestoItemDtos,"residentialComplexId", "actorId", 1500.0)
                 .block();
+        var lastBudget = budgetRepository.getLastBudgetByResidentialComplexId("residentialComplexId").block();
+        Assertions.assertNotNull(lastBudget);
         // Send the get request
         webTestClient.get()
-                .uri("/budget/2024")
+                .uri("/budget/" + lastBudget.id())
                 .exchange()
                 .expectStatus()
                 .isOk()
@@ -118,10 +130,12 @@ public class BudgetControllerIT extends IntegrationTestBase {
                 .fechaInicio(new Date())
                 .presupuesto(28.0)
                 .build());
-        transactBudgetRepository.transactCreateBudget(presupuestoItemDtos, "actorId", 1500.0)
+        transactBudgetRepository.transactCreateBudget(presupuestoItemDtos,"residentialComplexId", "actorId", 1500.0)
                 .block();
 
-        var items = budgetItemTaskRepository.getAllByBudgetId(2024).collectList().block();
+        var lastBudget = budgetRepository.getLastBudgetByResidentialComplexId("residentialComplexId").block();
+        Assertions.assertNotNull(lastBudget);
+        var items = budgetItemTaskRepository.getAllByBudgetId(lastBudget.id()).collectList().block();
 
         // Send the POST request with the CompleteTaskDto
         webTestClient.post()
@@ -169,11 +183,12 @@ public class BudgetControllerIT extends IntegrationTestBase {
                 .fechaInicio(new Date())
                 .presupuesto(2000.0)
                 .build());
-        transactBudgetRepository.transactCreateBudget(presupuestoItemDtos, "actorId", 0.0)
+        transactBudgetRepository.transactCreateBudget(presupuestoItemDtos,"residentialComplexId", "actorId", 0.0)
                 .block();
-
-        var itemTasks = budgetItemTaskRepository.getAllByBudgetId(2024).collectList().block();
-        var items = budgetItemRepository.getAllByBudgetId(2024).collectList().block();
+        var lastBudget = budgetRepository.getLastBudgetByResidentialComplexId("residentialComplexId").block();
+        Assertions.assertNotNull(lastBudget);
+        var itemTasks = budgetItemTaskRepository.getAllByBudgetId(lastBudget.id()).collectList().block();
+        var items = budgetItemRepository.getAllByBudgetId(lastBudget.id()).collectList().block();
 
         assert itemTasks != null;
         assert items != null;
@@ -189,7 +204,7 @@ public class BudgetControllerIT extends IntegrationTestBase {
 
         // Send the get request
         webTestClient.get()
-                .uri("/budget//report/2024")
+                .uri("/budget/report/" + lastBudget.id())
                 .exchange()
                 .expectStatus()
                 .isOk()

@@ -10,6 +10,6 @@ import reactor.core.publisher.Mono;
 import java.util.List;
 
 public interface TransactBudgetRepository {
-    Mono<Success> transactCreateBudget(List<PresupuestoItemDto> budgetItems, @NotBlank String actorId, @NonNull Double budgetAmountFromPreviousYear);
-    Mono<List<BudgetItemTaskDto>> getAllBudgetItemTasks(@NonNull Integer budgetId);
+    Mono<Success> transactCreateBudget(List<PresupuestoItemDto> budgetItems, @NotBlank String residentialComplexId, @NotBlank String actorId, @NonNull Double budgetAmountFromPreviousYear);
+    Mono<List<BudgetItemTaskDto>> getAllBudgetItemTasks(@NonNull String budgetId);
 }

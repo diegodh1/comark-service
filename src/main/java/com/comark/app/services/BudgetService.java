@@ -9,7 +9,7 @@ import reactor.core.publisher.Mono;
 import java.util.List;
 
 public interface BudgetService {
-    Mono<Success> upsertBudget(byte[] file, String actorId);
-    Mono<List<BudgetItemTaskDto>> getAllBudgetItemTasks(Integer budgetId);
+    Mono<Success> upsertBudget(byte[] file, String residentialComplexId);
+    Mono<List<BudgetItemTaskDto>> getAllBudgetItemTasks(String budgetId);
     Mono<BudgetItemTask> completeTask(CompleteTaskDto completeTaskDto);
 }

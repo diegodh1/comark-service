@@ -19,7 +19,7 @@ public class BudgetItemMapperImpl implements BudgetItemMapper{
         double expectedAmount = amount / frequency;
         return ImmutableBudgetItem.builder()
                 .id(UUID.randomUUID().toString())
-                .budgetId(0)
+                .budgetId("")
                 .type(presupuestoItemDto.getTipo().name())
                 .name(presupuestoItemDto.getNombre())
                 .accountingAccount(presupuestoItemDto.getCuentaContableId())

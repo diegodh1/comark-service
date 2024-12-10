@@ -10,5 +10,8 @@ import reactor.core.publisher.Mono;
 public interface BudgetRepository extends ReactiveCrudRepository<Budget, Integer> {
 
     @Query("SELECT * FROM budget WHERE id = :id")
-    Mono<ImmutableBudget> getBudgetById(@Param("id") Integer id);
+    Mono<ImmutableBudget> getBudgetById(@Param("id") String id);
+
+    @Query("SELECT * FROM budget WHERE residential_complex_id = :residentialComplexId ORDER BY created_at DESC LIMIT 1")
+    Mono<ImmutableBudget> getLastBudgetByResidentialComplexId(String residentialComplexId);
 }

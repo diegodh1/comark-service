@@ -19,6 +19,7 @@ import java.io.Serializable;
 public interface Activity {
     @Id
     String id();
+    String residentialComplexId();
     String originId();
     ActivityType activityType();
     String auxId();

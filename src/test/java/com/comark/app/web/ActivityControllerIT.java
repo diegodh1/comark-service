@@ -2,6 +2,7 @@ package com.comark.app.web;
 
 import com.comark.app.model.db.Activity;
 import com.comark.app.model.db.ImmutableActivity;
+import com.comark.app.model.db.ImmutableResidentialComplex;
 import com.comark.app.model.dto.activity.ActivityPageDto;
 import com.comark.app.model.dto.budget.BudgetItemTaskDto;
 import com.comark.app.model.enums.ActivityStatus;
@@ -9,6 +10,7 @@ import com.comark.app.model.enums.ActivityType;
 import com.comark.app.repository.ActivityRepository;
 import com.comark.app.repository.CustomActivityRepository;
 import com.comark.app.repository.IntegrationTestBase;
+import com.comark.app.repository.ResidentialComplexRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -30,7 +32,7 @@ public class ActivityControllerIT extends IntegrationTestBase {
     @Autowired
     private ActivityRepository activityRepository;
     @Autowired
-    private CustomActivityRepository customActivityRepository;
+    private ResidentialComplexRepository residentialComplexRepository;
 
     @BeforeEach
     void setup(){
@@ -40,10 +42,12 @@ public class ActivityControllerIT extends IntegrationTestBase {
     @AfterEach
     void clean(){
         activityRepository.deleteAll().block();
+        residentialComplexRepository.deleteAll().block();
     }
 
     @Test
     void getAllActivities(){
+        residentialComplexRepository.save(ImmutableResidentialComplex.builder().id("residentialComplexId").createdAt(Instant.now().toEpochMilli()).updatedAt(Instant.now().toEpochMilli()).build()).block();
         for (int i = 0; i < 20; i++){
             activityRepository.save(ImmutableActivity.builder()
                     .id(UUID.randomUUID().toString())
@@ -52,6 +56,7 @@ public class ActivityControllerIT extends IntegrationTestBase {
                     .createdAt(Instant.now().toEpochMilli())
                     .auxId("2024")
                     .details("details")
+                    .residentialComplexId("residentialComplexId")
                     .scheduledDate(Instant.now().toEpochMilli())
                     .status(ActivityStatus.REALIZADO)
                     .closingDate(Instant.now().toEpochMilli())
