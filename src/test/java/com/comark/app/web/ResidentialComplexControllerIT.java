@@ -8,14 +8,17 @@ import com.comark.app.model.enums.IdentificationType;
 import com.comark.app.model.enums.ResidentialComplexItemEntityType;
 import com.comark.app.model.enums.ResidentialComplexType;
 import com.comark.app.repository.*;
+import com.comark.app.services.EmailService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import reactor.core.publisher.Mono;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -23,6 +26,9 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
+
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.when;
 
 public class ResidentialComplexControllerIT extends IntegrationTestBase {
     private WebTestClient webTestClient;
@@ -114,6 +120,7 @@ public class ResidentialComplexControllerIT extends IntegrationTestBase {
                 .name("name")
                 .type(ResidentialComplexType.APARTAMENTO)
                 .buildingNumber("101A")
+                .percentage(0.0)
                 .build()
         ).block();
 
@@ -156,6 +163,7 @@ public class ResidentialComplexControllerIT extends IntegrationTestBase {
                 .name("name")
                 .type(ResidentialComplexType.APARTAMENTO)
                 .buildingNumber("101A")
+                .percentage(0.0)
                 .build()
         ).block();
 
@@ -194,6 +202,7 @@ public class ResidentialComplexControllerIT extends IntegrationTestBase {
                 .name("name")
                 .type(ResidentialComplexType.APARTAMENTO)
                 .buildingNumber("101A")
+                .percentage(0.0)
                 .build()
         ).block();
 

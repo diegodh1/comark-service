@@ -1,14 +1,14 @@
 package com.comark.app.web;
 
 import com.comark.app.exception.ComarkAppException;
-import com.comark.app.model.dto.error.ComarkAppErrorDto;
 import com.comark.app.model.dto.error.ImmutableComarkAppErrorDto;
 import com.comark.app.model.dto.residentialComplex.*;
 import com.comark.app.services.ResidentialComplexService;
-import jakarta.ws.rs.QueryParam;
 import lombok.NonNull;
+import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
@@ -102,5 +102,29 @@ public class ResidentialComplexController {
     public Mono<ResponseEntity> addResidentialComplexItemEntities(@PathVariable String id, @PathVariable String residentialComplexItemId, @RequestBody List<ResidentialComplexItemEntityDto> items) {
         return residentialComplexService.addResidentialComplexItemEntities(residentialComplexItemId, items)
                 .then(Mono.fromCallable(() -> ResponseEntity.ok().build()));
+    }
+
+    @PostMapping(value = "/upload/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public Mono<ResponseEntity<Object>> uploadBudgetFile(@PathVariable String id, @RequestPart(value = "file") FilePart excelFile) {
+        return Mono.justOrEmpty(excelFile)
+                .switchIfEmpty(Mono.error(new IllegalArgumentException("invalid File")))
+                .flatMap(this::getByteArray)
+                .flatMap(data -> residentialComplexService.loadAndUpsertResidentialComplexInformation(data, id))
+                .then(Mono.just(ResponseEntity.ok().build()))
+                .onErrorResume(ComarkAppException.class, error ->
+                        Mono.just(ResponseEntity.status(error.getStatusCode()).body(ImmutableComarkAppErrorDto.builder().code(error.getStatusCode()).message(error.getErrorMessage()).build()))
+                );
+    }
+
+    private Mono<byte[]> getByteArray(FilePart filePart) {
+        return DataBufferUtils.join(filePart.content())
+                .flatMap(dataBuffer -> {
+                    // Create a new byte array and copy data from DataBuffer
+                    byte[] bytes = new byte[dataBuffer.readableByteCount()];
+                    dataBuffer.read(bytes);
+                    // Release the DataBuffer after usage
+                    DataBufferUtils.release(dataBuffer);
+                    return Mono.just(bytes);
+                });
     }
 }

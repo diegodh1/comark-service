@@ -18,6 +18,8 @@ public interface ResidentialComplexItemEntityDto {
     IdentificationType identificationType();
     String identificationNumber();
     ResidentialComplexItemEntityType type();
+    @Nullable
+    Double percentage();
     String name();
     @Nullable
     String lastName();

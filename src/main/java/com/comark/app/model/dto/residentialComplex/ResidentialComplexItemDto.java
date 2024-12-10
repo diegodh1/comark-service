@@ -18,9 +18,7 @@ public interface ResidentialComplexItemDto {
     @Nullable
     String buildingNumber();
     @Nullable
-    String parkingNumber();
-    @Nullable
-    String storageRoomNumber ();
+    Double percentage();
     @Nullable
     Double rentPrice();
     @Nullable

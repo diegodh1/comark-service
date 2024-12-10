@@ -2,24 +2,26 @@ package com.comark.app.services;
 
 import com.comark.app.exception.ComarkAppException;
 import com.comark.app.model.db.*;
-import com.comark.app.model.dto.residentialComplex.ImmutableResidentialComplexEventDto;
-import com.comark.app.model.dto.residentialComplex.ResidentialComplexEventDto;
-import com.comark.app.model.dto.residentialComplex.ResidentialComplexItemDto;
-import com.comark.app.model.dto.residentialComplex.ResidentialComplexItemEntityDto;
+import com.comark.app.model.dto.residentialComplex.*;
+import com.comark.app.model.enums.AmenityType;
 import com.comark.app.model.enums.EventStatus;
+import com.comark.app.model.enums.ResidentialComplexItemEntityType;
 import com.comark.app.model.enums.ResidentialComplexType;
 import com.comark.app.repository.*;
+import com.comark.app.services.util.FileUtil;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
+import reactor.util.function.Tuple3;
 import reactor.util.function.Tuples;
 
-import java.text.SimpleDateFormat;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.comark.app.model.enums.ResidentialComplexType.ZONA_COMUN;
 import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
@@ -31,16 +33,20 @@ public class ResidentialComplexServiceImpl implements ResidentialComplexService 
     private final ResidentialComplexItemRepository residentialComplexItemRepository;
     private final ResidentialComplexItemEntityRepository residentialComplexItemEntityRepository;
     private final ResidentialComplexAdministratorRepository residentialComplexAdministratorRepository;
+    private final ResidentialComplexItemAmenityRepository residentialComplexItemAmenityRepository;
     private final EmailService emailService;
     private final ResidentialComplexItemEventRepository residentialComplexItemEventRepository;
+    private final FileUtil fileUtil;
 
-    public ResidentialComplexServiceImpl(ResidentialComplexRepository residentialComplexRepository, ResidentialComplexItemRepository residentialComplexItemRepository, ResidentialComplexItemEntityRepository residentialComplexItemEntityRepository, ResidentialComplexAdministratorRepository residentialComplexAdministratorRepository, EmailService emailService, ResidentialComplexItemEventRepository residentialComplexItemEventRepository) {
+    public ResidentialComplexServiceImpl(ResidentialComplexRepository residentialComplexRepository, ResidentialComplexItemRepository residentialComplexItemRepository, ResidentialComplexItemEntityRepository residentialComplexItemEntityRepository, ResidentialComplexAdministratorRepository residentialComplexAdministratorRepository, EmailService emailService, ResidentialComplexItemEventRepository residentialComplexItemEventRepository, FileUtil fileUtil, ResidentialComplexItemAmenityRepository residentialComplexItemAmenityRepository, ResidentialComplexItemAmenityRepository residentialComplexItemAmenityRepository1) {
         this.residentialComplexRepository = residentialComplexRepository;
         this.residentialComplexItemRepository = residentialComplexItemRepository;
         this.residentialComplexItemEntityRepository = residentialComplexItemEntityRepository;
         this.residentialComplexAdministratorRepository = residentialComplexAdministratorRepository;
         this.emailService = emailService;
         this.residentialComplexItemEventRepository = residentialComplexItemEventRepository;
+        this.fileUtil = fileUtil;
+        this.residentialComplexItemAmenityRepository = residentialComplexItemAmenityRepository1;
     }
 
     @Override
@@ -80,13 +86,12 @@ public class ResidentialComplexServiceImpl implements ResidentialComplexService 
                                 .residentialComplexId(residentialComplex.id())
                                 .id(UUID.randomUUID().toString())
                                 .buildingNumber(item.buildingNumber())
+                                .percentage(Optional.ofNullable(item.percentage()).orElse(0.0))
                                 .name(item.name())
                                 .capacity(item.capacity())
-                                .parkingNumber(item.parkingNumber())
                                 .description(item.description())
                                 .type(ResidentialComplexType.valueOf(item.type()))
                                 .rentPrice(item.rentPrice())
-                                .storageRoomNumber(item.storageRoomNumber())
                                 .restrictions(item.restrictions())
                                 .build()).toList())
                 .flatMap(itemList -> residentialComplexItemRepository.saveAll(itemList).collectList())
@@ -212,6 +217,81 @@ public class ResidentialComplexServiceImpl implements ResidentialComplexService 
     public Mono<Void> updateResidentialComplexItemEventStatus(String eventId, EventStatus status) {
         return residentialComplexItemEventRepository.updateStatus(status.name(), eventId)
                 .then();
+    }
+
+    @Transactional
+    @Override
+    public Mono<Void> loadAndUpsertResidentialComplexInformation(byte[] file, String residentialComplexId) {
+        return  fileUtil.loadResidentialComplexItemOwnerFromFile(file)
+                .flatMap(items -> Mono.just(getResidentialComplexInformation(residentialComplexId, items)))
+                .flatMap(tuples -> residentialComplexItemRepository.saveAll(tuples.getT1())
+                        .collectList()
+                        .flatMap(response  -> Mono.just(Tuples.of(tuples.getT2(), tuples.getT3())))
+                )
+                .flatMap(tuple2 -> Mono.zip(residentialComplexItemEntityRepository.saveAll(tuple2.getT1()).collectList(), residentialComplexItemAmenityRepository.saveAll(tuple2.getT2()).collectList()))
+                //.flatMap(tuple2 -> emailService.sendEmail(tuple2.getT1().stream().map(ResidentialComplexItemEntity::email).toArray(String[]::new), "Creación de cuenta", "Bienvenido a Comarkapp, puede registrar su cuenta en el siguiente link http://localhost:8081"))
+                .then();
+    }
+
+    private Tuple3<List<ResidentialComplexItem>, List<ResidentialComplexItemEntity>, List<ResidentialComplexItemAmenity>> getResidentialComplexInformation(String residentialComplexId, List<ResidentialComplexItemOwnerDto> residentialComplexItemOwnerDtos) {
+        //apartments or zones
+
+        var mapApartmentNumber =  new HashMap<String, String>();
+        var items =  residentialComplexItemOwnerDtos.stream().map(item -> (ResidentialComplexItem)ImmutableResidentialComplexItem.builder()
+                .id(UUID.randomUUID().toString())
+                .residentialComplexId(residentialComplexId)
+                .restrictions(item.restrictions())
+                .description(item.description())
+                .rentPrice(item.rentPrice())
+                .name(item.buildingNumber())
+                .percentage(item.residentialComplexCoefficient())
+                .capacity(item.capacity())
+                .buildingNumber(item.buildingNumber())
+                .type(item.type())
+                .build()).toList();
+
+        items.forEach(it -> mapApartmentNumber.put(it.buildingNumber(), it.id()));
+
+        var entities = residentialComplexItemOwnerDtos.stream().map(item -> (ResidentialComplexItemEntity) ImmutableResidentialComplexItemEntity.builder()
+                .residentialComplexItemId(mapApartmentNumber.get(item.buildingNumber()))
+                .id(UUID.randomUUID().toString())
+                .updatedAt(Instant.now().toEpochMilli())
+                .createdAt(Instant.now().toEpochMilli())
+                .email(item.ownerEmail())
+                .type(ResidentialComplexItemEntityType.PROPIETARIO)
+                .identificationNumber(item.identificationNumber())
+                .isActive(true)
+                .isRealStateAgency(false)
+                .lastName(item.ownerLastName())
+                .name(item.ownerName())
+                .phoneNumber(Optional.ofNullable(item.ownerPhoneNumber()).orElse(""))
+                .identificationType(item.identificationType())
+                .build()).collect(Collectors.toSet()).stream().toList();
+
+        var amenities1 = residentialComplexItemOwnerDtos.stream()
+                .filter(it -> it.parkingNumber() != null && !it.parkingNumber().isEmpty() && !it.parkingNumber().strip().equals("NO APLICA"))
+                .map(item -> (ResidentialComplexItemAmenity)ImmutableResidentialComplexItemAmenity
+                .builder()
+                .amenityId(item.parkingNumber())
+                .residentialComplexItemId(mapApartmentNumber.get(item.buildingNumber()))
+                .id(UUID.randomUUID().toString())
+                .percentage(item.parkingNumberCoefficient())
+                .amenityType(AmenityType.PARQUEADERO)
+                .build()).collect(Collectors.toSet()).stream().toList();
+
+        var amenities2 = residentialComplexItemOwnerDtos.stream()
+                .filter(it -> it.storageRoomNumber() != null && !it.storageRoomNumber().isEmpty() && !it.storageRoomNumber().strip().equals("NO APLICA"))
+                .map(item -> (ResidentialComplexItemAmenity)ImmutableResidentialComplexItemAmenity
+                        .builder()
+                        .amenityId(item.storageRoomNumber())
+                        .residentialComplexItemId(mapApartmentNumber.get(item.buildingNumber()))
+                        .id(UUID.randomUUID().toString())
+                        .percentage(item.coefficientStorageRoomNumber())
+                        .amenityType(AmenityType.DEPOSITO)
+                        .build()).collect(Collectors.toSet()).stream().toList();
+        var amenities = new ArrayList<>(amenities1);
+        amenities.addAll(amenities2);
+        return Tuples.of(items, entities, amenities);
     }
 
     public static String convertEpochToStringWithoutTimeZone(long epochTime) {

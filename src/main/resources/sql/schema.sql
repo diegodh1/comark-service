@@ -111,9 +111,8 @@ CREATE TABLE residential_complex_item (
                                           description TEXT,
                                           type VARCHAR(255) NOT NULL,
                                           building_number VARCHAR(255),
-                                          parking_number VARCHAR(255),
-                                          storage_room_number VARCHAR(255),
                                           rent_price DECIMAL(10, 2),
+                                          percentage DECIMAL(10, 2),
                                           capacity INT,
                                           restrictions TEXT,
                                           UNIQUE (residential_complex_id, building_number, type),
@@ -136,6 +135,16 @@ CREATE TABLE residential_complex_item_entity (
                                                  is_active BOOLEAN NOT NULL,
                                                  UNIQUE (identification_type, identification_number, type),
                                                  FOREIGN KEY ("residential_complex_item_id") REFERENCES "residential_complex_item" ("id")
+);
+
+CREATE TABLE residential_complex_item_amenity (
+                                          id VARCHAR(255) PRIMARY KEY,
+                                          residential_complex_item_id VARCHAR(255) NOT NULL,
+                                          amenity_id VARCHAR(255) NOT NULL,
+                                          percentage DECIMAL(10, 6),
+                                          amenity_type VARCHAR(255) NOT NULL,
+                                          UNIQUE (residential_complex_item_id, amenity_id, amenity_type),
+                                          FOREIGN KEY ("residential_complex_item_id") REFERENCES "residential_complex_item" ("id")
 );
 
 CREATE TABLE residential_complex_item_event (

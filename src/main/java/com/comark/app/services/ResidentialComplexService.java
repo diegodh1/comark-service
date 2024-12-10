@@ -6,6 +6,7 @@ import com.comark.app.model.db.ResidentialComplexItemEvent;
 import com.comark.app.model.dto.residentialComplex.ResidentialComplexEventDto;
 import com.comark.app.model.dto.residentialComplex.ResidentialComplexItemDto;
 import com.comark.app.model.dto.residentialComplex.ResidentialComplexItemEntityDto;
+import com.comark.app.model.dto.residentialComplex.ResidentialComplexItemOwnerDto;
 import com.comark.app.model.enums.EventStatus;
 import reactor.core.publisher.Mono;
 
@@ -24,4 +25,5 @@ public interface ResidentialComplexService {
     Mono<Void> createResidentialComplexItemEvent(String residentialComplexId, String residentialItemId, String eventName, String description, String restriction, String startDateTime, String endDateTime, String organizerId);
     Mono<List<ResidentialComplexEventDto>> getAllPendingEvents(String residentialComplexId);
     Mono<Void> updateResidentialComplexItemEventStatus(String eventId, EventStatus status);
+    Mono<Void> loadAndUpsertResidentialComplexInformation(byte[] file, String residentialComplexId);
 }

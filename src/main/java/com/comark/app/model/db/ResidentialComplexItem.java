@@ -18,15 +18,12 @@ public interface ResidentialComplexItem {
     String id();
     String residentialComplexId();
     String name();
+    Double percentage();
     @Nullable
     String description();
     ResidentialComplexType type();
     @Nullable
     String buildingNumber();
-    @Nullable
-    String parkingNumber();
-    @Nullable
-    String storageRoomNumber ();
     @Nullable
     Double rentPrice();
     @Nullable
